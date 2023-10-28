@@ -1,5 +1,5 @@
-const TodoListModel = require("../models/todolistModel");
-const TodoModel = require("../models/todoModels");
+const {TodoList} = require("../models/todolistModel");
+const {TodoModel} = require("../models/todoModels");
 class todoList {
   async getList(req, res) {
     try {
@@ -11,7 +11,7 @@ class todoList {
           message: "Todo not found",
         });
       } else {
-        const data = await TodoListModel.find({});
+        const data = await TodoList.find({});
         return res.status(200).json({
           status: "Success",
           data: data,
@@ -19,7 +19,7 @@ class todoList {
       }
     } catch (error) {
       console.log(error);
-      return res.status(422).json({
+      return res.status(500).json({
         status: "Failed",
         message: error,
       });
@@ -29,7 +29,7 @@ class todoList {
   async getDetailList(req, res) {
     try {
       const id = req.params.id;
-      const data = await TodoListModel.findById(id);
+      const data = await TodoList.findById(id);
       if (!data) {
         throw new Error("Data not found");
       } else {
@@ -40,7 +40,7 @@ class todoList {
       }
     } catch (error) {
       console.log(error);
-      return res.status(422).json({
+      return res.status(500).json({
         status: "Failed",
         message: error,
       });
@@ -59,7 +59,7 @@ class todoList {
           message: "Todo Not Found",
         });
       } else {
-        let newTodoList = await TodoListModel.create(body); // Notice the change here
+        let newTodoList = await TodoList.create(body); // Notice the change here
         console.log(newTodoList);
         return res.status(200).json({
           status: "Success",
@@ -68,7 +68,7 @@ class todoList {
       }
     } catch (error) {
       console.log(error);
-      return res.status(422).json({
+      return res.status(500).json({
         status: "Failed",
         message: error,
       });
