@@ -15,6 +15,7 @@ router.post("/register", userControl.register);
 router.post("/login", userControl.login);
 
 router.use(jwtMiddleWare);
+router.put("/user/:id", userControl.updateProfile);
 // todo
 router.get("/todo", Todo.getTodo);
 router.get("/todo/:id", Todo.getDetail);

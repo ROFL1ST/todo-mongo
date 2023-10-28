@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const { default: jwtDecode } = require("jwt-decode");
 const jwt = require("jsonwebtoken");
 const { default: mongoose } = require("mongoose");
-
+const cloudinary = require("cloudinary").v2;
 class userControl {
   async register(req, res) {
     try {
@@ -86,6 +86,7 @@ class userControl {
 
   async updateProfile(req, res) {
     try {
+      let headers = req.headers;
       const ObjectId = mongoose.Types.ObjectId;
       let id = jwtDecode(headers.authorization).id;
       let body = req.body;
@@ -96,15 +97,16 @@ class userControl {
           message: "User's not found",
         });
       }
-      await userModel.updateOne(
-        { _id: new ObjectId(id) },
-        {
-          $set: {
-            username: body.username,
-            name: body.name,
-          },
-        }
-      );
+      console.log(req);
+      // await userModel.updateOne(
+      //   { _id: new ObjectId(id) },
+      //   {
+      //     $set: {
+      //       username: body.username,
+      //       name: body.name,
+      //     },
+      //   }
+      // );
     } catch (error) {
       console.log(error);
       return res.status(500).json({
