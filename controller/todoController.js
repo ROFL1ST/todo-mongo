@@ -1,11 +1,11 @@
 const { default: jwtDecode } = require("jwt-decode");
 const { TodoModel, ListUsersModel } = require("../models/todoModels");
-const { TodoList } = require("../models/todolistModel");
 const { ObjectId } = require("mongodb");
 const { default: mongoose } = require("mongoose");
 class todo {
   async getTodo(req, res) {
     try {
+      const ObjectId = mongoose.Types.ObjectId;
       let headers = req.headers;
       let id = jwtDecode(headers.authorization).id;
       // console.log(id);
@@ -19,11 +19,22 @@ class todo {
           },
         },
         {
+          $addFields: {
+            // You can use $slice to limit the number of documents from the joined collection
+            todolists: { $slice: ["$todolists", 5] },
+          },
+        },
+        {
           $lookup: {
             from: "listusers",
             localField: "_id",
             foreignField: "id_todo",
             as: "user",
+          },
+        },
+        {
+          $match: {
+            "user.id_user": new ObjectId(id),
           },
         },
       ]);
@@ -43,9 +54,40 @@ class todo {
 
   async getDetail(req, res) {
     try {
+      const ObjectId = mongoose.Types.ObjectId;
       const id = req.params.id;
       console.log(id);
-      const data = await TodoModel.findById(id);
+      const data = await TodoModel.aggregate([
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "todolists",
+          },
+        },
+        {
+          $lookup: {
+            from: "listusers",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "user",
+          },
+        },
+        {
+          $match: {
+            _id: new ObjectId(id),
+            "user.id_user": { $exists: true }, // Check if "user" array exists
+          },
+        },
+      ]);
+
+      if (data.length == 0) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Todo's not found",
+        });
+      }
       return res.status(200).json({
         status: "Success",
         data: data,
@@ -153,7 +195,6 @@ class todo {
           $match: {
             _id: new ObjectId(id),
             "user.id_user": { $exists: true }, // Check if "user" array exists
-            "user.role": "admin",
           },
         },
       ]);
@@ -164,7 +205,9 @@ class todo {
         });
       }
       let userId = jwtDecode(headers.authorization).id;
-      if (data[0].id_user != userId)
+      let listUser = data[0].user.filter((i) => i.id_user == userId);
+
+      if (listUser[0].role == "member")
         return res.status(401).json({
           status: "Failed",
           message: "You are not the admin of this todo",

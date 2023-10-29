@@ -11,6 +11,7 @@ const http = createServer(app);
 const io = new Server(http);
 const port = "8000";
 const uri = process.env.DB_HOST;
+const dbName = process.env.DB_DATABASE;
 app.use(cors());
 app.use(express.json());
 app.use("/api", router);
@@ -31,11 +32,11 @@ mongoose
 io.on("connection", (socket) => {
   console.log(`${socket.id} join`);
   socket.on("online", (data) => {
-    isOnline(data)
+    isOnline(data);
   });
 
   socket.on("offline", (data) => {
-    isOffline(data)
+    isOffline(data);
   });
   socket.on("disconnect", (data) => {
     console.log(data);
