@@ -1,5 +1,8 @@
-const {TodoList} = require("../models/todolistModel");
-const {TodoModel} = require("../models/todoModels");
+const { TodoList } = require("../models/todolistModel");
+const { TodoModel } = require("../models/todoModels");
+const { default: mongoose } = require("mongoose");
+const { default: jwtDecode } = require("jwt-decode");
+
 class todoList {
   async getList(req, res) {
     try {
@@ -49,6 +52,8 @@ class todoList {
 
   async postList(req, res) {
     try {
+      const headers = req.headers;
+      const id_user = jwtDecode(headers.authorization).id;
       const id = req.body.id_todo;
       const body = req.body;
       console.log(body);
@@ -59,6 +64,7 @@ class todoList {
           message: "Todo Not Found",
         });
       } else {
+        body.id_user = id_user;
         let newTodoList = await TodoList.create(body); // Notice the change here
         console.log(newTodoList);
         return res.status(200).json({

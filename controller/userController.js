@@ -1,9 +1,16 @@
 const userModel = require("../models/userModel");
 const bcrypt = require("bcrypt");
+require("dotenv").config();
 const { default: jwtDecode } = require("jwt-decode");
 const jwt = require("jsonwebtoken");
 const { default: mongoose } = require("mongoose");
 const cloudinary = require("cloudinary").v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY_CLOUD,
+  api_secret: process.env.API_SECRET_CLOUD,
+});
 class userControl {
   async register(req, res) {
     try {
@@ -97,16 +104,36 @@ class userControl {
           message: "User's not found",
         });
       }
-      console.log(req);
-      // await userModel.updateOne(
-      //   { _id: new ObjectId(id) },
-      //   {
-      //     $set: {
-      //       username: body.username,
-      //       name: body.name,
-      //     },
-      //   }
-      // );
+      console.log(req.file?.path);
+      if (req.file?.path != undefined) {
+        const { secure_url, public_id } = await cloudinary.uploader.upload(
+          req.file.path,
+          { folder: "/todo/users" }
+        );
+        console.log(checkUser.photo_profile != null);
+        body.photo_profile = secure_url;
+        body.public_id = public_id;
+        if (checkUser.photo_profile != null) {
+          await cloudinary.uploader.destroy(checkUser.public_id);
+        }
+      } else {
+        body.photo_profile = checkUser.photo_profile;
+        body.public_id = checkUser.public_id;
+      }
+      await userModel.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: {
+            username: body.username,
+            name: body.name,
+            photo_profile: body.photo_profile,
+            public_id: body.public_id,
+          },
+        }
+      );
+      return res.status(200).json({
+        status: "Success",
+      });
     } catch (error) {
       console.log(error);
       return res.status(500).json({

@@ -4,6 +4,7 @@ const Todo = require("../controller/todoController");
 const TodoList = require("../controller/todoListController");
 const userControl = require("../controller/userController");
 const { jwtMiddleWare } = require("../middleware/jwt_middleware");
+const { uploader } = require("../middleware/file_upload");
 router.get("/", (req, res) => {
   res.json({
     status: "Ok",
@@ -15,7 +16,11 @@ router.post("/register", userControl.register);
 router.post("/login", userControl.login);
 
 router.use(jwtMiddleWare);
-router.put("/user/:id", userControl.updateProfile);
+router.put(
+  "/user",
+  uploader.single("photo_profile"),
+  userControl.updateProfile
+);
 // todo
 router.get("/todo", Todo.getTodo);
 router.get("/todo/:id", Todo.getDetail);

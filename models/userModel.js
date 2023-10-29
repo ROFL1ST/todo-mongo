@@ -19,6 +19,10 @@ const userSchema = mongoose.Schema(
       type: String,
       default: null,
     },
+    public_id: {
+      type: String,
+      default: null,
+    },
     status: {
       type: String,
       enum: ["online", "offline"],

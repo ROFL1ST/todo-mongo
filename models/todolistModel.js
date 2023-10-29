@@ -15,9 +15,15 @@ const todoListSchema = mongoose.Schema(
       type: String,
       required: [true, "Please enter the id of activity list"],
     },
-    checked: {
-      type: Number,
-      default: 0,
+    status: {
+      type: String,
+      enum: ["open", "pending", "in progress", "completed"],
+      default: "open",
+    },
+    priority: {
+      type: String,
+      enum: ["low", "normal", "high", "urgent"],
+      default: "low",
     },
     date: {
       type: Date,
