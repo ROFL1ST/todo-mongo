@@ -21,6 +21,8 @@ router.put(
   uploader.single("photo_profile"),
   userControl.updateProfile
 );
+router.get("/user", userControl.searchUser);
+
 // todo
 router.get("/todo", Todo.getTodo);
 router.get("/todo/:id", Todo.getDetail);
@@ -30,6 +32,13 @@ router.put("/todo/:id", Todo.updateTodo);
 
 // todo list
 router.post("/todo/createList", TodoList.postList);
-router.get("/todo/list/:id", TodoList.getList);
+router.get("/todo/list/:id", TodoList.getList)
+router.put("/todo/list/:id", TodoList.updateList)
+router.get("/todo/detail-list/:id", TodoList.getDetailList);
+router.post("/todo/post-attaches/:id", uploader.single("attach_url"), TodoList.postAttaches);
+router.post("/todo/sublist/:id", TodoList.postSubList);
+
+
+
 
 module.exports = router;

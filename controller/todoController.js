@@ -5,10 +5,18 @@ const { default: mongoose } = require("mongoose");
 class todo {
   async getTodo(req, res) {
     try {
+      const { page, limit, key } = req.query;
+      const size = (parseInt(page) - 1) * parseInt(limit);
       const ObjectId = mongoose.Types.ObjectId;
       let headers = req.headers;
       let id = jwtDecode(headers.authorization).id;
       // console.log(id);
+      if (page == undefined || limit == undefined) {
+        return res.status(402).json({
+          status: "Failed",
+          message: "Please enter the required params",
+        });
+      }
       const data = await TodoModel.aggregate([
         {
           $lookup: {
@@ -33,9 +41,66 @@ class todo {
           },
         },
         {
-          $match: {
-            "user.id_user": new ObjectId(id),
+          $lookup: {
+            from: "users", // Use the "users" collection for the user details
+            localField: "user.id_user",
+            foreignField: "_id", // Assuming that the user ID in "listusers" matches "_id" in "users"
+            as: "userDetails",
           },
+        },
+        {
+          $addFields: {
+            user: {
+              $map: {
+                input: "$user",
+                as: "user",
+                in: {
+                  $mergeObjects: [
+                    "$$user",
+                    {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: "$userDetails",
+                            as: "ud",
+                            cond: { $eq: ["$$ud._id", "$$user.id_user"] },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+        {
+          $project: {
+            userDetails: 0,
+            "user.password": 0,
+            "user.public_id": 0,
+            "user.createdAt": 0,
+            "user.updatedAt": 0,
+          },
+        },
+        {
+          $match: {
+            $and: [
+              { "user.id_user": new ObjectId(id) },
+              key
+                ? {
+                    name: { $regex: key, $options: "i" },
+                  }
+                : {},
+            ],
+          },
+        },
+        {
+          $skip: size,
+        },
+        {
+          $limit: parseInt(limit),
         },
       ]);
 

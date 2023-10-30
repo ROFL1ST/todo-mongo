@@ -104,13 +104,11 @@ class userControl {
           message: "User's not found",
         });
       }
-      console.log(req.file?.path);
       if (req.file?.path != undefined) {
         const { secure_url, public_id } = await cloudinary.uploader.upload(
           req.file.path,
           { folder: "/todo/users" }
         );
-        console.log(checkUser.photo_profile != null);
         body.photo_profile = secure_url;
         body.public_id = public_id;
         if (checkUser.photo_profile != null) {
@@ -133,6 +131,49 @@ class userControl {
       );
       return res.status(200).json({
         status: "Success",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+
+  async searchUser(req, res) {
+    try {
+      const { page, limit, key } = req.query;
+      const size = (parseInt(page) - 1) * parseInt(limit);
+      let user = await userModel.aggregate([
+        {
+          $project: {
+            username: "$username",
+            name: "$name",
+            status: "$status",
+            photo_profile: "$photo_profile",
+          },
+        },
+        key
+          ? {
+              $match: {
+                $or: [
+                  { name: { $regex: key, $options: "i" } },
+                  { username: { $regex: key, $options: "i" } },
+                ],
+              },
+            }
+          : {},
+        {
+          $skip: size,
+        },
+        {
+          $limit: parseInt(limit),
+        },
+      ]);
+      return res.status(200).json({
+        status: "Success",
+        data: user,
       });
     } catch (error) {
       console.log(error);
