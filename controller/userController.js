@@ -1,10 +1,10 @@
 const userModel = require("../models/userModel");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
-const { default: jwtDecode } = require("jwt-decode");
 const jwt = require("jsonwebtoken");
 const { default: mongoose } = require("mongoose");
 const cloudinary = require("cloudinary").v2;
+const { default: jwtDecode } = require("jwt-decode");
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,

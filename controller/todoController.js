@@ -1,4 +1,3 @@
-const { default: jwtDecode } = require("jwt-decode");
 const jwt = require("jsonwebtoken");
 const {
   TodoModel,
@@ -8,7 +7,8 @@ const {
 const userModel = require("../models/userModel");
 const { v4: uuidv4 } = require("uuid");
 const { default: mongoose } = require("mongoose");
-const { body } = require("express-validator");
+const { default: jwtDecode } = require("jwt-decode");
+const { default: jwtDecode2 } = require("jwt-decode");
 class todo {
   async getTodo(req, res) {
     try {
@@ -221,7 +221,7 @@ class todo {
       let headers = req.headers;
       let userId = jwtDecode(headers.authorization).id;
       let todo = await TodoModel.find({ _id: id });
-      if (!todo)
+      if (!todo || todo.length == 0)
         return res
           .status(404)
           .json({ status: "Failed", message: "No Todo's found" });
@@ -246,10 +246,17 @@ class todo {
           message: "You can't invite yourself",
         });
       }
-      let inviteCheck = await InvitationalModel.findOne({
-        invitedUser: new ObjectId(body.invitedUser),
-      });
-      if (inviteCheck) {
+      let inviteCheck = await InvitationalModel.aggregate([
+        {
+          $match: {
+            $and: [
+              { invitedUser: new ObjectId(userId) },
+              { status: { $ne: "pending" } },
+            ],
+          },
+        },
+      ]);
+      if (inviteCheck.length != 0) {
         return res.status(400).json({
           status: "Failed",
           message: "This user is already invited",
@@ -258,7 +265,7 @@ class todo {
       let checkUser = await ListUsersModel.findOne({
         id_user: body.id_user,
       });
-
+      
       if (checkUser) {
         return res.status(400).json({
           status: "Failed",
@@ -342,40 +349,26 @@ class todo {
       const id_user = jwtDecode(headers.authorization).id;
       let invitational = await InvitationalModel.aggregate([
         {
-          $lookup: {
-            from: "users", // Use the "users" collection for the user details
-            localField: "invited_by",
-            foreignField: "_id", // Assuming that the user ID in "listusers" matches "_id" in "users"
-            as: "invitedBy",
-          },
-        },
-        {
-          $project: {
-            invited_by: 0,
-            "invitedBy.password": 0,
-            "invitedBy.public_id": 0,
-            "invitedBy.createdAt": 0,
-            "invitedBy.updatedAt": 0,
-          },
-        },
-        {
           $match: {
-            _id: new ObjectId(id),
-            invitedUser: new ObjectId(id_user),
-            status: "pending",
+            $and: [
+              { _id: new ObjectId(id) },
+              { invitedUser: new ObjectId(id_user) },
+              { status: "pending" },
+            ],
           },
         },
       ]);
-      if (!invitational) {
+      // return console.log(invitational);
+      if (!invitational || invitational.length == 0) {
         return res.status(404).json({
           status: "Failed",
           message: "Invitation is not found",
         });
       }
-      // return console.log(invitational);
-      const invite_code = invitational[0]?.token;
+      const invite_code = await invitational[0]?.token;
       // console.log(jwtDecode(invite_token).id);
-      if (jwtDecode(invite_code).id != id_user) {
+
+      if (jwtDecode2(invite_code).id != id_user) {
         return res.status(401).json({
           status: "Failed",
           message: "This invitation doesn't bellong to you",
@@ -383,10 +376,10 @@ class todo {
       }
       if (body.status == "accepted") {
         let check = await TodoModel.findOne({
-          code: jwtDecode(invite_code).code,
+          code: jwtDecode2(invite_code).code,
         });
         let check_list = await ListUsersModel.findOne({
-          id_user: jwtDecode(invite_code).id,
+          id_user: jwtDecode2(invite_code).id,
         });
         if (!check) {
           return res.status(401).json({
@@ -402,7 +395,7 @@ class todo {
           });
         }
         body.id_todo = check._id;
-        body.id_user = jwtDecode(invite_code).id;
+        body.id_user = jwtDecode2(invite_code).id;
         body.token = invite_code;
         await ListUsersModel.create(body);
         await InvitationalModel.findOneAndDelete({ _id: new ObjectId(id) });

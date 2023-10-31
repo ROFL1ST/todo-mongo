@@ -26,10 +26,10 @@ router.get("/user", userControl.searchUser);
 // todo
 router.get("/todo", Todo.getTodo);
 router.get("/todo/invitation", Todo.getInvitation);
-router.put("/todo/invitation/:id", Todo.invitationRespond);
 router.get("/todo/:id", Todo.getDetail);
 router.post("/todo", Todo.postTodo);
 router.post("/todo/add/:id", Todo.inviteUser);
+router.put("/todo/invitation/:id", Todo.invitationRespond);
 router.put("/todo/:id", Todo.updateTodo);
 
 // todo list
