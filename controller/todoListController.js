@@ -424,7 +424,7 @@ class todoList {
         });
       }
 
-      let subListUpdate = await SubList.updateOne(
+      await SubList.updateOne(
         { _id: new ObjectId(id) },
         {
           $set: {

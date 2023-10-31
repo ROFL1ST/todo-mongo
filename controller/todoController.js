@@ -1,7 +1,14 @@
 const { default: jwtDecode } = require("jwt-decode");
-const { TodoModel, ListUsersModel } = require("../models/todoModels");
-const { ObjectId } = require("mongodb");
+const jwt = require("jsonwebtoken");
+const {
+  TodoModel,
+  ListUsersModel,
+  InvitationalModel,
+} = require("../models/todoModels");
+const userModel = require("../models/userModel");
+const { v4: uuidv4 } = require("uuid");
 const { default: mongoose } = require("mongoose");
+const { body } = require("express-validator");
 class todo {
   async getTodo(req, res) {
     try {
@@ -78,6 +85,8 @@ class todo {
         {
           $project: {
             userDetails: 0,
+            code: 0,
+            "user.token": 0,
             "user.password": 0,
             "user.public_id": 0,
             "user.createdAt": 0,
@@ -121,7 +130,6 @@ class todo {
     try {
       const ObjectId = mongoose.Types.ObjectId;
       const id = req.params.id;
-      console.log(id);
       const data = await TodoModel.aggregate([
         {
           $lookup: {
@@ -137,6 +145,12 @@ class todo {
             localField: "_id",
             foreignField: "id_todo",
             as: "user",
+          },
+        },
+        {
+          $project: {
+            code: 0,
+            "user.token": 0,
           },
         },
         {
@@ -172,10 +186,17 @@ class todo {
       let headers = req.headers;
       let id = jwtDecode(headers.authorization).id;
       body.id_user = id;
+      const code = uuidv4();
+      const token = jwt.sign(
+        { id: id, code: code },
+        process.env.JWT_INVITATION_TOKEN
+      );
+      body.code = code;
       let data = await TodoModel.create(body);
       await ListUsersModel.create({
         id_todo: data._id,
         id_user: id,
+        token: token,
         role: "admin",
       });
 
@@ -192,21 +213,48 @@ class todo {
     }
   }
 
-  async addUser(req, res) {
+  async inviteUser(req, res) {
     try {
+      const ObjectId = mongoose.Types.ObjectId;
       let id = req.params.id;
       let body = req.body;
       let headers = req.headers;
+      let userId = jwtDecode(headers.authorization).id;
       let todo = await TodoModel.find({ _id: id });
-      if (!todo[0])
+      if (!todo)
         return res
           .status(404)
           .json({ status: "Failed", message: "No Todo's found" });
-      let userId = jwtDecode(headers.authorization).id;
       if (todo[0].id_user != userId)
         return res
           .status(401)
           .json({ status: "Failed", message: "You are not the admin" });
+
+      let checked = await userModel.findOne({
+        _id: body.invitedUser,
+      });
+
+      if (!checked) {
+        return res.status(400).json({
+          status: "Failed",
+          message: "This user is not exist",
+        });
+      }
+      if (body.invitedUser == userId) {
+        return res.status(400).json({
+          status: "Failed",
+          message: "You can't invite yourself",
+        });
+      }
+      let inviteCheck = await InvitationalModel.findOne({
+        invitedUser: new ObjectId(body.invitedUser),
+      });
+      if (inviteCheck) {
+        return res.status(400).json({
+          status: "Failed",
+          message: "This user is already invited",
+        });
+      }
       let checkUser = await ListUsersModel.findOne({
         id_user: body.id_user,
       });
@@ -217,12 +265,19 @@ class todo {
           message: "This user is already exist",
         });
       }
+      // let newListUser = await ListUsersModel.create(body);
+      // return console.log(todo[0].code);
+      const token = jwt.sign(
+        { id: body.invitedUser, code: todo[0].code },
+        process.env.JWT_INVITATION_TOKEN
+      );
       body.id_todo = id;
-      let newListUser = await ListUsersModel.create(body);
+      body.token = token;
+      body.invited_by = userId;
+      let invite = await InvitationalModel.create(body);
       return res.status(200).json({
         status: "Success",
-        message: "User has been added",
-        data: newListUser,
+        message: "Invitation has been sent",
       });
     } catch (error) {
       console.log(error);
@@ -233,6 +288,147 @@ class todo {
     }
   }
 
+  async getInvitation(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const id_user = jwtDecode(headers.authorization).id;
+      let invitational = await InvitationalModel.aggregate([
+        {
+          $lookup: {
+            from: "users", // Use the "users" collection for the user details
+            localField: "invited_by",
+            foreignField: "_id", // Assuming that the user ID in "listusers" matches "_id" in "users"
+            as: "invitedBy",
+          },
+        },
+        {
+          $project: {
+            invited_by: 0,
+            "invitedBy.password": 0,
+            "invitedBy.public_id": 0,
+            "invitedBy.createdAt": 0,
+            "invitedBy.updatedAt": 0,
+          },
+        },
+        {
+          $match: {
+            invitedUser: new ObjectId(id_user),
+          },
+        },
+      ]);
+      return res.status(200).json({
+        status: "Success",
+        data: invitational,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+
+  async invitationRespond(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const body = req.body;
+      const id = req.params.id;
+      const id_user = jwtDecode(headers.authorization).id;
+      let invitational = await InvitationalModel.aggregate([
+        {
+          $lookup: {
+            from: "users", // Use the "users" collection for the user details
+            localField: "invited_by",
+            foreignField: "_id", // Assuming that the user ID in "listusers" matches "_id" in "users"
+            as: "invitedBy",
+          },
+        },
+        {
+          $project: {
+            invited_by: 0,
+            "invitedBy.password": 0,
+            "invitedBy.public_id": 0,
+            "invitedBy.createdAt": 0,
+            "invitedBy.updatedAt": 0,
+          },
+        },
+        {
+          $match: {
+            _id: new ObjectId(id),
+            invitedUser: new ObjectId(id_user),
+            status: "pending",
+          },
+        },
+      ]);
+      if (!invitational) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Invitation is not found",
+        });
+      }
+      // return console.log(invitational);
+      const invite_code = invitational[0]?.token;
+      // console.log(jwtDecode(invite_token).id);
+      if (jwtDecode(invite_code).id != id_user) {
+        return res.status(401).json({
+          status: "Failed",
+          message: "This invitation doesn't bellong to you",
+        });
+      }
+      if (body.status == "accepted") {
+        let check = await TodoModel.findOne({
+          code: jwtDecode(invite_code).code,
+        });
+        let check_list = await ListUsersModel.findOne({
+          id_user: jwtDecode(invite_code).id,
+        });
+        if (!check) {
+          return res.status(401).json({
+            status: "Failed",
+            message: "Token is not valid",
+          });
+        }
+
+        if (check_list) {
+          return res.status(401).json({
+            status: "Failed",
+            message: "You already joined this todo",
+          });
+        }
+        body.id_todo = check._id;
+        body.id_user = jwtDecode(invite_code).id;
+        body.token = invite_code;
+        await ListUsersModel.create(body);
+        await InvitationalModel.findOneAndDelete({ _id: new ObjectId(id) });
+        return res.status(200).json({
+          status: "Success",
+          message: "You have joined the todo",
+        });
+      } else {
+        await InvitationalModel.updateOne(
+          { _id: new ObjectId(id) },
+          {
+            $set: {
+              status: body.status,
+            },
+          }
+        );
+        return res.status(200).json({
+          status: "Success",
+          message: "You have rejected the invitation",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
   async updateTodo(req, res) {
     try {
       const ObjectId = mongoose.Types.ObjectId;
