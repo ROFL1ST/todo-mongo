@@ -220,12 +220,38 @@ class todo {
       let body = req.body;
       let headers = req.headers;
       let userId = jwtDecode(headers.authorization).id;
-      let todo = await TodoModel.find({ _id: id });
+      const todo = await TodoModel.aggregate([
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "todolists",
+          },
+        },
+        {
+          $lookup: {
+            from: "listusers",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "user",
+          },
+        },
+        {
+          $match: {
+            _id: new ObjectId(id),
+            "user.id_user": { $exists: true }, // Check if "user" array exists
+            "user.id_user": new ObjectId(userId),
+          },
+        },
+      ]);
       if (!todo || todo.length == 0)
-        return res
-          .status(404)
-          .json({ status: "Failed", message: "No Todo's found" });
-      if (todo[0].id_user != userId)
+        return res.status(404).json({
+          status: "Failed",
+          message: "Todo or user is not in this server",
+        });
+      let listUser = todo[0].user.filter((i) => i.id_user == userId);
+      if (listUser[0].role == "member")
         return res
           .status(401)
           .json({ status: "Failed", message: "You are not the admin" });
@@ -250,14 +276,15 @@ class todo {
         {
           $match: {
             $and: [
-              { invitedUser: new ObjectId(userId) },
-              { status: { $ne: "pending" } },
+              { invitedUser: new ObjectId(body.invitedUser) },
+              { status: "pending" },
             ],
           },
         },
       ]);
+      // return console.log(inviteCheck);
       if (inviteCheck.length != 0) {
-        return res.status(400).json({
+        return res.status(401).json({
           status: "Failed",
           message: "This user is already invited",
         });
@@ -265,7 +292,7 @@ class todo {
       let checkUser = await ListUsersModel.findOne({
         id_user: body.id_user,
       });
-      
+
       if (checkUser) {
         return res.status(400).json({
           status: "Failed",
@@ -484,6 +511,22 @@ class todo {
         status: "Success",
         data: body,
       });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+
+  async updateRole(req, res) {
+    try {
+      const ObjectId = mongoose.Types.ObjectId;
+      let id = req.params.id;
+      let body = req.body;
+      let headers = req.headers;
+      let userId = jwtDecode(headers.authorization).id;
     } catch (error) {
       console.log(error);
       return res.status(500).json({
