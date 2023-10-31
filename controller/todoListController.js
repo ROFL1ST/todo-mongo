@@ -36,7 +36,6 @@ class todoList {
   async getDetailList(req, res) {
     try {
       const ObjectId = mongoose.Types.ObjectId;
-
       const id = req.params.id;
       const data = await TodoList.aggregate([
         {
@@ -362,6 +361,83 @@ class todoList {
           data: newSub,
         });
       }
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+
+  async updateSubList(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const id_user = jwtDecode(headers.authorization).id;
+      const id = req.params.id;
+      const body = req.body;
+      const todo = await TodoModel.aggregate([
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "todolists",
+          },
+        },
+        {
+          $lookup: {
+            from: "listusers",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "user",
+          },
+        },
+        {
+          $lookup: {
+            from: "sublists",
+            localField: "todolists._id",
+            foreignField: "id_todoList",
+            as: "sublists",
+          },
+        },
+        {
+          $match: {
+            "sublists._id": new ObjectId(id),
+            "user.id_user": { $exists: true }, // Check if "user" array exists
+            "user.id_user": new ObjectId(id_user),
+          },
+        },
+      ]);
+      if (!todo) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Todo or user is not in this server",
+        });
+      }
+      let listUser = todo[0].user.filter((i) => i.id_user == id_user);
+      if (listUser[0].role == "member") {
+        return res.status(401).json({
+          status: "Failed",
+          message: "You are not the admin of this todo",
+        });
+      }
+
+      let subListUpdate = await SubList.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: {
+            name: body.name,
+            check: body.check,
+          },
+        }
+      );
+
+      return res.status(200).json({
+        status: "Success",
+        data: subListUpdate,
+      });
     } catch (error) {
       console.log(error);
       return res.status(500).json({

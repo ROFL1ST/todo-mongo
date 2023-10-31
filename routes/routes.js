@@ -32,13 +32,16 @@ router.put("/todo/:id", Todo.updateTodo);
 
 // todo list
 router.post("/todo/createList", TodoList.postList);
-router.get("/todo/list/:id", TodoList.getList)
-router.put("/todo/list/:id", TodoList.updateList)
+router.get("/todo/list/:id", TodoList.getList);
+router.put("/todo/list/:id", TodoList.updateList);
 router.get("/todo/detail-list/:id", TodoList.getDetailList);
-router.post("/todo/post-attaches/:id", uploader.single("attach_url"), TodoList.postAttaches);
+router.post(
+  "/todo/post-attaches/:id",
+  uploader.single("attach_url"),
+  TodoList.postAttaches
+);
 router.post("/todo/sublist/:id", TodoList.postSubList);
-
-
+router.put("/todo/sublist/:id", TodoList.updateSubList);
 
 
 module.exports = router;
