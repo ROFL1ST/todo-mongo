@@ -410,10 +410,10 @@ class todoList {
           },
         },
       ]);
-      if (!todo) {
+      if (!todo || todo.length == 0) {
         return res.status(404).json({
           status: "Failed",
-          message: "Todo or user is not in this server",
+          message: "sublist or user is not in this server",
         });
       }
       let listUser = todo[0].user.filter((i) => i.id_user == id_user);
@@ -429,14 +429,14 @@ class todoList {
         {
           $set: {
             name: body.name,
-            check: body.check,
+            checked: body.checked,
           },
         }
       );
 
       return res.status(200).json({
         status: "Success",
-        data: subListUpdate,
+        message: "You've updated the sublist",
       });
     } catch (error) {
       console.log(error);

@@ -71,6 +71,7 @@ const subListSchema = mongoose.Schema({
   },
   checked: {
     type: Number,
+    enum: [0, 1],
     default: 0,
   },
 });
