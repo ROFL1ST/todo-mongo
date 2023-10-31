@@ -313,7 +313,10 @@ class todo {
         },
         {
           $match: {
-            invitedUser: new ObjectId(id_user),
+            $or: [
+              { invitedUser: new ObjectId(id_user) },
+              { "invitedBy._id": new ObjectId(id_user) },
+            ],
           },
         },
       ]);
