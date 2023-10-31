@@ -8,7 +8,6 @@ const userModel = require("../models/userModel");
 const { v4: uuidv4 } = require("uuid");
 const { default: mongoose } = require("mongoose");
 const { default: jwtDecode } = require("jwt-decode");
-const { default: jwtDecode2 } = require("jwt-decode");
 class todo {
   async getTodo(req, res) {
     try {
@@ -65,16 +64,32 @@ class todo {
                   $mergeObjects: [
                     "$$user",
                     {
-                      $arrayElemAt: [
-                        {
-                          $filter: {
-                            input: "$userDetails",
-                            as: "ud",
-                            cond: { $eq: ["$$ud._id", "$$user.id_user"] },
+                      $let: {
+                        vars: {
+                          userDetailsFiltered: {
+                            $arrayElemAt: [
+                              {
+                                $filter: {
+                                  input: "$userDetails",
+                                  as: "ud",
+                                  cond: { $eq: ["$$ud._id", "$$user.id_user"] },
+                                },
+                              },
+                              0,
+                            ],
                           },
                         },
-                        0,
-                      ],
+                        in: {
+                          $arrayToObject: {
+                            $filter: {
+                              input: {
+                                $objectToArray: "$$userDetailsFiltered",
+                              },
+                              cond: { $ne: ["$$this.k", "_id"] },
+                            },
+                          },
+                        },
+                      },
                     },
                   ],
                 },
@@ -197,7 +212,7 @@ class todo {
         id_todo: data._id,
         id_user: id,
         token: token,
-        role: "admin",
+        role: "owner",
       });
 
       return res.status(200).json({
@@ -395,7 +410,7 @@ class todo {
       const invite_code = await invitational[0]?.token;
       // console.log(jwtDecode(invite_token).id);
 
-      if (jwtDecode2(invite_code).id != id_user) {
+      if (jwtDecode(invite_code).id != id_user) {
         return res.status(401).json({
           status: "Failed",
           message: "This invitation doesn't bellong to you",
@@ -403,10 +418,10 @@ class todo {
       }
       if (body.status == "accepted") {
         let check = await TodoModel.findOne({
-          code: jwtDecode2(invite_code).code,
+          code: jwtDecode(invite_code).code,
         });
         let check_list = await ListUsersModel.findOne({
-          id_user: jwtDecode2(invite_code).id,
+          id_user: jwtDecode(invite_code).id,
         });
         if (!check) {
           return res.status(401).json({
@@ -422,7 +437,7 @@ class todo {
           });
         }
         body.id_todo = check._id;
-        body.id_user = jwtDecode2(invite_code).id;
+        body.id_user = jwtDecode(invite_code).id;
         body.token = invite_code;
         await ListUsersModel.create(body);
         await InvitationalModel.findOneAndDelete({ _id: new ObjectId(id) });
@@ -527,6 +542,75 @@ class todo {
       let body = req.body;
       let headers = req.headers;
       let userId = jwtDecode(headers.authorization).id;
+      let data = await ListUsersModel.findById({
+        _id: new ObjectId(id),
+      });
+      // console.log(data.token);
+      if (!data) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "User's no found",
+        });
+      }
+      let user_token = data.token;
+      let code = jwtDecode(user_token).code;
+      // let code_todo =
+      let check_role = await TodoModel.aggregate([
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "todolists",
+          },
+        },
+        {
+          $lookup: {
+            from: "listusers",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "user",
+          },
+        },
+
+        {
+          $match: {
+            $or: [{ code: code }, { "user.id_user": new ObjectId(id) }],
+          },
+        },
+      ]);
+      if (data.length == 0) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "User's not found",
+        });
+      }
+      // console.log(code, id, check_role);
+      if (check_role.length == 0) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Todo's or user's not found",
+        });
+      }
+      // return console.log(code);
+      let listUser = check_role[0].user.filter((i) => i.id_user == userId);
+      console.log(listUser);
+      if (listUser[0].role == "member")
+        return res
+          .status(401)
+          .json({ status: "Failed", message: "You are not the admin" });
+      await ListUsersModel.updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: {
+            role: body.role,
+          },
+        }
+      );
+      return res.status(200).json({
+        status: "Success",
+        data: body,
+      });
     } catch (error) {
       console.log(error);
       return res.status(500).json({

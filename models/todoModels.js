@@ -41,7 +41,7 @@ const list_user = mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["admin", "member"],
+    enum: ["owner","admin", "member"],
     default: "member",
     required: true,
   },

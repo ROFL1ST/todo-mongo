@@ -31,6 +31,9 @@ router.post("/todo", Todo.postTodo);
 router.post("/todo/add/:id", Todo.inviteUser);
 router.put("/todo/invitation/:id", Todo.invitationRespond);
 router.put("/todo/:id", Todo.updateTodo);
+router.put("/todo/role/:id", Todo.updateRole)
+
+// notes : hanya owner yang bisa delete todo
 
 // todo list
 router.post("/todo/createList", TodoList.postList);
