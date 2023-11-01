@@ -90,7 +90,103 @@ class userControl {
       });
     }
   }
+  async profile(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      let { id } = jwtDecode(headers.authorization);
+      const data = await userModel.aggregate([
+        {
+          $lookup: {
+            from: "todos",
+            localField: "_id",
+            foreignField: "id_user",
+            as: "todo",
+          },
+        },
+        {
+          $match: {
+            _id: new ObjectId(id),
+          },
+        },
+        {
+          $unwind: "$todo",
+        },
+        {
+          $project: {
+            password: 0,
+            "todo.code": 0,
+          },
+        },
+      ]);
+      // console.log(data);
+      if (!data) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "User's Not Found",
+        });
+      }
 
+      return res.status(200).json({
+        status: "Success",
+        data: data,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+  async detailProfile(req, res) {
+    try {
+      const ObjectId = mongoose.Types.ObjectId;
+      const { id } = req.params;
+      const data = await userModel.aggregate([
+        {
+          $lookup: {
+            from: "todos",
+            localField: "_id",
+            foreignField: "id_user",
+            as: "todo",
+          },
+        },
+        {
+          $match: {
+            _id: new ObjectId(id),
+          },
+        },
+        {
+          $unwind: "$todo",
+        },
+        {
+          $project: {
+            password: 0,
+            "todo.code": 0,
+          },
+        },
+      ]);
+      // console.log(data);
+      if (!data) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "User's Not Found",
+        });
+      }
+
+      return res.status(200).json({
+        status: "Success",
+        data: data,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
   async updateProfile(req, res) {
     try {
       let headers = req.headers;

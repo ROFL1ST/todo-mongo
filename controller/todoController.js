@@ -8,6 +8,8 @@ const userModel = require("../models/userModel");
 const { v4: uuidv4 } = require("uuid");
 const { default: mongoose } = require("mongoose");
 const { default: jwtDecode } = require("jwt-decode");
+const bcrypt = require("bcrypt");
+
 class todo {
   async getTodo(req, res) {
     try {
@@ -217,7 +219,6 @@ class todo {
 
       return res.status(200).json({
         status: "Success",
-        data: data,
       });
     } catch (error) {
       console.log(error);

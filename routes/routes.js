@@ -22,6 +22,8 @@ router.put(
   userControl.updateProfile
 );
 router.get("/user", userControl.searchUser);
+router.get("/profile", userControl.profile);
+router.get("/user/:id", userControl.detailProfile);
 
 // todo
 router.get("/todo", Todo.getTodo);
@@ -31,7 +33,7 @@ router.post("/todo", Todo.postTodo);
 router.post("/todo/add/:id", Todo.inviteUser);
 router.put("/todo/invitation/:id", Todo.invitationRespond);
 router.put("/todo/:id", Todo.updateTodo);
-router.put("/todo/role/:id", Todo.updateRole)
+router.put("/todo/role/:id", Todo.updateRole);
 
 // notes : hanya owner yang bisa delete todo
 
