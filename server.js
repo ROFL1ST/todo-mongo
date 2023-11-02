@@ -5,17 +5,22 @@ const { isOnline, isOffline } = require("./controller/userController");
 const cors = require("cors");
 const router = require("./routes/routes");
 const { Server } = require("socket.io");
-const { createServer } = require("http");
+const http = require("http");
+const { sendMessage } = require("./controller/chatController");
 const app = express();
-const http = createServer(app);
-const io = new Server(http);
-const port = "8000";
+const port = process.env.PORT || 8000;
 const uri = process.env.DB_HOST;
 const dbName = process.env.DB_DATABASE;
 app.use(cors());
 app.use(express.json());
 app.use("/api", router);
-
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173", // Replace with your front-end's URL
+    methods: ["GET", "POST"],
+  },
+});
 mongoose
   .connect(uri)
   .then(() => {
@@ -32,16 +37,21 @@ mongoose
 io.on("connection", (socket) => {
   console.log(`${socket.id} join`);
   socket.on("online", (data) => {
+    console.log(`${data} HAIIIIIIII`);
     isOnline(data);
   });
+  socket.on("send_message", (data) => {
+    sendMessage(data);
+    socket.to(data.room_code).emit("received_message", data)
+    console.log(`${data.room_code} HAIIIIIIII`);
+  });
+  // socket.on("received_message", (data) => {
+  //   console.log("diterima", data);
+  // });
 
   socket.on("offline", (data) => {
     isOffline(data);
   });
-  socket.on("disconnect", (data) => {
-    console.log(data);
-    console.log(`${socket.id} disconnect`);
-  });
 });
 
-http.listen(port);
+server.listen(port);

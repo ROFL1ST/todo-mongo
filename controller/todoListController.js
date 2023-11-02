@@ -3,7 +3,8 @@ const { TodoModel } = require("../models/todoModels");
 const { default: jwtDecode } = require("jwt-decode");
 const { default: mongoose } = require("mongoose");
 const cloudinary = require("cloudinary").v2;
-
+const { RoomChat } = require("../models/chatModel");
+const crypto = require("crypto");
 class todoList {
   async getList(req, res) {
     try {
@@ -18,6 +19,22 @@ class todoList {
       } else {
         const data = await TodoList.aggregate([
           { $match: { id_todo: new ObjectId(id) } },
+          {
+            $lookup: {
+              from: "sublists",
+              localField: "_id",
+              foreignField: "id_todoList",
+              as: "sublist",
+            },
+          },
+          {
+            $lookup: {
+              from: "roomchats",
+              localField: "_id",
+              foreignField: "id_todoList",
+              as: "chat",
+            },
+          },
         ]);
         return res.status(200).json({
           status: "Success",
@@ -146,7 +163,14 @@ class todoList {
           });
         }
         body.id_user = id_user;
-        let newTodoList = await TodoList.create(body); // Notice the change here
+        let newTodoList = await TodoList.create(body).then(async (i) => {
+          let roomCode = crypto.randomBytes(10).toString("hex");
+          let dataRoom = {
+            room_code: roomCode,
+            id_todoList: i._id,
+          };
+          await RoomChat.create(dataRoom);
+        }); // Notice the change here
         console.log(newTodoList);
         return res.status(200).json({
           status: "Success",
@@ -281,7 +305,15 @@ class todoList {
         if (req.file?.path != undefined) {
           const { secure_url, public_id } = await cloudinary.uploader.upload(
             req.file.path,
-            { folder: "/todo/list", resource_type: "auto" }
+            {
+              folder: "/todo/list",
+              public_id: `${req.file.originalname.substring(
+                0,
+                req.file.originalname.length - 5
+              )}-${crypto.randomInt(0, 100000)}`,
+              resource_type: "auto",
+              format: `${req.file.originalname.split(".")[1]}`,
+            }
           );
           body.attach_url = secure_url;
           body.public_id = public_id;

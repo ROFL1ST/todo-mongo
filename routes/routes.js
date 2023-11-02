@@ -5,6 +5,7 @@ const TodoList = require("../controller/todoListController");
 const userControl = require("../controller/userController");
 const { jwtMiddleWare } = require("../middleware/jwt_middleware");
 const { uploader } = require("../middleware/file_upload");
+const Chat = require("../controller/chatController");
 router.get("/", (req, res) => {
   res.json({
     status: "Ok",
@@ -49,5 +50,8 @@ router.post(
 );
 router.post("/todo/sublist/:id", TodoList.postSubList);
 router.put("/todo/sublist/:id", TodoList.updateSubList);
+
+// group chat
+router.get("/groupchat/:id", Chat.getRoom);
 
 module.exports = router;
