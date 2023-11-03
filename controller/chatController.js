@@ -48,10 +48,51 @@ class chat {
         room_code: data.room_code,
         id_user: id,
         message: data.msg,
-        id_room: data._id
+        id_room: data._id,
       });
     } catch (error) {
       console.log(error);
+    }
+  }
+
+  async getMessageList(req, res) {
+    try {
+      const { room_code } = req.params;
+      let data = await Message.aggregate([
+        {
+          $lookup: {
+            from: "users",
+            localField: "id_user",
+            foreignField: "_id",
+            as: "infoUser",
+          },
+        },
+
+        {
+          $unwind: "$infoUser",
+        },
+        {
+          $project: {
+            "infoUser.password": 0,
+          },
+        },
+        {
+          $match: {
+            room_code: room_code,
+          },
+        },
+      ]);
+      console.log(data);
+      return res.status(200).json({
+        status: "Success",
+        data: data,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
     }
   }
 }

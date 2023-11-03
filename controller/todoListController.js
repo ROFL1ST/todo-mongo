@@ -5,6 +5,11 @@ const { default: mongoose } = require("mongoose");
 const cloudinary = require("cloudinary").v2;
 const { RoomChat } = require("../models/chatModel");
 const crypto = require("crypto");
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY_CLOUD,
+  api_secret: process.env.API_SECRET_CLOUD,
+});
 class todoList {
   async getList(req, res) {
     try {
@@ -325,6 +330,51 @@ class todoList {
           });
         }
       }
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+
+  async getAttaches(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const id_user = jwtDecode(headers.authorization).id;
+      const id = req.params.id;
+      const data = await attaches.aggregate([
+        {
+          $match: { id_todoList: new ObjectId(id) },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "id_user",
+            foreignField: "_id",
+            as: "users",
+          },
+        },
+        {
+          $project: {
+            public_id: 0,
+            "users.password": 0,
+          },
+        },
+      ]);
+      if (data.length == 0) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "List's not found",
+        });
+      }
+
+      return res.status(200).json({
+        status: "Success",
+        data: data,
+      });
     } catch (error) {
       console.log(error);
       return res.status(500).json({

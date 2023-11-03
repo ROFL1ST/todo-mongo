@@ -17,7 +17,7 @@ app.use("/api", router);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // Replace with your front-end's URL
+    origin: "http://localhost:2000", // Replace with your front-end's URL
     methods: ["GET", "POST"],
   },
 });
@@ -37,13 +37,15 @@ mongoose
 io.on("connection", (socket) => {
   console.log(`${socket.id} join`);
   socket.on("online", (data) => {
-    console.log(`${data} HAIIIIIIII`);
     isOnline(data);
   });
+  socket.on("joined_room", (data) => {
+    console.log(data);
+    socket.join(data.room_code);
+  });
   socket.on("send_message", (data) => {
+    socket.to(data.room_code).emit("receive_message", data);
     sendMessage(data);
-    socket.to(data.room_code).emit("received_message", data)
-    console.log(`${data.room_code} HAIIIIIIII`);
   });
   // socket.on("received_message", (data) => {
   //   console.log("diterima", data);
