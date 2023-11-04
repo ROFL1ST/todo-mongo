@@ -25,3 +25,22 @@ API_SECRET_CLOUD = [secret_cloud]
 4. run "npm start"
 
 **BASE URL** = http://localhost:8000
+
+## Login
+
+```markdown
+/todo/login
+```
+**Method : POST**
+Headers
+
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+
+|   Name   |  Status  |         |
+| :------: | :------: | :-----: |
+| username | Required | String  |
+| password | Required | String  |
