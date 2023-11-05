@@ -30,6 +30,7 @@ router.get("/user/:id", userControl.detailProfile);
 router.get("/todo", Todo.getTodo);
 router.get("/todo/invitation", Todo.getInvitation);
 router.get("/todo/:id", Todo.getDetail);
+router.delete("/todo/:id", Todo.deleteTodo);
 router.post("/todo", Todo.postTodo);
 router.post("/todo/add/:id", Todo.inviteUser);
 router.put("/todo/invitation/:id", Todo.invitationRespond);

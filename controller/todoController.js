@@ -9,6 +9,8 @@ const { v4: uuidv4 } = require("uuid");
 const { default: mongoose } = require("mongoose");
 const { default: jwtDecode } = require("jwt-decode");
 const bcrypt = require("bcrypt");
+const { RoomChat, Message } = require("../models/chatModel");
+const { TodoList, SubList } = require("../models/todolistModel");
 
 class todo {
   async getTodo(req, res) {
@@ -228,7 +230,89 @@ class todo {
       });
     }
   }
-
+  async deleteTodo(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const id_user = jwtDecode(headers.authorization).id;
+      const id = req.params.id;
+      if (!ObjectId.isValid(id)) throw new Error("Invalid todo ID");
+      // check user owner
+      const todo = await TodoModel.aggregate([
+        {
+          $lookup: {
+            from: "listusers",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "user",
+          },
+        },
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "lists",
+          },
+        },
+        {
+          $match: {
+            _id: new ObjectId(id),
+            "user.id_user": { $exists: true }, // Check if "user" array exists
+            "user.id_user": new ObjectId(id_user),
+          },
+        },
+      ]);
+      if (todo.length == 0) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Todo or user is not in this server",
+        });
+      }
+      let listUser = todo[0].user.filter((i) => i.id_user == id_user);
+      if (listUser[0].role != "owner") {
+        return res.status(401).json({
+          status: "Failed",
+          message: "You are not the owner of this todo",
+        });
+      }
+      // return console.log(todo[0]);
+      if (todo[0].lists.length > 0) {
+        const todoListIds = todo[0].lists.map((list) => list._id);
+        await SubList.deleteMany({ id_todoList: { $in: todoListIds } });
+        let check_chat = await RoomChat.aggregate([
+          {
+            $match: {
+              id_todoList: { $in: todoListIds },
+            },
+          },
+        ]);
+        // return console.log(check_chat);
+        if (check_chat.length != 0) {
+          const rommsId = check_chat.map((list) => list.room_code);
+          await RoomChat.deleteMany({ id_todoList: { $in: todoListIds } });
+          await Message.deleteMany({
+            room_code: { $in: rommsId },
+          });
+        }
+        await TodoList.deleteMany({ _id: { $in: todoListIds } });
+      }
+      // return console.log(todo[0].lists);
+      await ListUsersModel.deleteMany({ id_todo: new ObjectId(id) });
+      await InvitationalModel.deleteMany({ id_todo: new ObjectId(id) });
+      await TodoModel.deleteOne({ _id: new ObjectId(id) });
+      return res.status(200).json({
+        status: "Success",
+        message: "Todo deleted successfully",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
   async inviteUser(req, res) {
     try {
       const ObjectId = mongoose.Types.ObjectId;

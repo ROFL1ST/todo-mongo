@@ -6,6 +6,7 @@ const todoListSchema = mongoose.Schema(
     id_todo: {
       type: ObjectId,
       required: [true, "Please enter the name of activity list"],
+      ref: "todos",
     },
     id_user: {
       type: ObjectId,
@@ -45,6 +46,7 @@ const attachListSchema = mongoose.Schema({
   id_todoList: {
     type: ObjectId,
     required: true,
+    ref: "todolists",
   },
   attach_url: {
     type: String,
@@ -64,6 +66,7 @@ const subListSchema = mongoose.Schema({
   id_todoList: {
     type: ObjectId,
     required: true,
+    ref: "todolists",
   },
   name: {
     type: String,
@@ -77,7 +80,6 @@ const subListSchema = mongoose.Schema({
 });
 
 // comment
-
 
 const TodoList = mongoose.model("todolists", todoListSchema);
 

@@ -34,6 +34,7 @@ const list_user = mongoose.Schema({
   id_todo: {
     type: ObjectId,
     required: true,
+    ref: "todos",
   },
   id_user: {
     type: ObjectId,
@@ -41,7 +42,7 @@ const list_user = mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["owner","admin", "member"],
+    enum: ["owner", "admin", "member"],
     default: "member",
     required: true,
   },
@@ -61,6 +62,7 @@ const invitational = mongoose.Schema({
   id_todo: {
     type: ObjectId,
     required: true,
+    ref: "todos",
   },
   invitedUser: {
     type: ObjectId,
