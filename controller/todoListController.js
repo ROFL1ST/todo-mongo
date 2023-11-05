@@ -3,7 +3,7 @@ const { TodoModel } = require("../models/todoModels");
 const { default: jwtDecode } = require("jwt-decode");
 const { default: mongoose } = require("mongoose");
 const cloudinary = require("cloudinary").v2;
-const { RoomChat } = require("../models/chatModel");
+const { RoomChat, Message } = require("../models/chatModel");
 const crypto = require("crypto");
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -176,7 +176,6 @@ class todoList {
           };
           await RoomChat.create(dataRoom);
         }); // Notice the change here
-        console.log(newTodoList);
         return res.status(200).json({
           status: "Success",
           data: newTodoList,
@@ -251,6 +250,81 @@ class todoList {
       return res.status(200).json({
         status: "Success",
       });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+
+  async deleteList(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const id_user = jwtDecode(headers.authorization).id;
+      const id = req.params.id;
+      const todo = await TodoModel.aggregate([
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "todolists",
+          },
+        },
+        {
+          $lookup: {
+            from: "listusers",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "user",
+          },
+        },
+        {
+          $match: {
+            "todolists._id": new ObjectId(id),
+            "user.id_user": { $exists: true }, // Check if "user" array exists
+            "user.id_user": new ObjectId(id_user),
+          },
+        },
+      ]);
+      if (!todo) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Todo or user is not in this server",
+        });
+      }
+      let listUser = todo[0].user.filter((i) => i.id_user == id_user);
+      if (listUser[0].role == "member") {
+        return res.status(401).json({
+          status: "Failed",
+          message: "You are not the admin of this todo",
+        });
+      }
+      let check_chat = await RoomChat.findOne({
+        id_todoList: id,
+      });
+      // console.log(check_chat);
+      if (check_chat) {
+        await RoomChat.findOneAndDelete({
+          id_todoList: id,
+        });
+        await Message.deleteMany({
+          room_code: RoomChat.room_code,
+        });
+      }
+      let check_sub = await SubList.findOne({ id_todoList: id });
+      if (check_sub) {
+        await SubList.deleteMany({
+          id_todoList: id,
+        });
+      }
+      const deleteTask = await TodoList.deleteOne({ _id: id });
+      return res.status(200).json({
+        status: "Success"
+      })
     } catch (error) {
       console.log(error);
       return res.status(500).json({

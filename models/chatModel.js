@@ -5,6 +5,7 @@ const roomChatSchema = mongoose.Schema({
   id_todoList: {
     type: ObjectId,
     required: true,
+    ref: "todolists"
   },
   room_code: {
     type: String,
@@ -16,7 +17,7 @@ const messageSchema = mongoose.Schema({
   id_room: {
     type: ObjectId,
     required: true,
-    ref: "roomChats",
+    ref: "roomchats",
   },
   id_user: {
     type: ObjectId,

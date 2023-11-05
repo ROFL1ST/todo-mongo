@@ -51,6 +51,7 @@ router.post(
 router.get("/todo/get-attaches/:id", TodoList.getAttaches);
 router.post("/todo/sublist/:id", TodoList.postSubList);
 router.put("/todo/sublist/:id", TodoList.updateSubList);
+router.delete("/todo/remove-list/:id", TodoList.deleteList);
 
 // group chat
 router.get("/groupchat/:id", Chat.getRoom);
