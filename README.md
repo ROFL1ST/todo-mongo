@@ -5,7 +5,7 @@
 1. Clone this repository
 
 ```markdown
-https://github.com/Al-Ghozy03/kecamatan-jonggol.git](https://github.com/ROFL1ST/todo-mongo-api.git)https://github.com/ROFL1ST/todo-mongo-api.git
+[https://github.com/ROFL1ST/todo-mongo-api.git](https://github.com/ROFL1ST/todo-mongo-api.git)
 ```
 2. run "npm install"
 3. Create .env file, then copy this code below
