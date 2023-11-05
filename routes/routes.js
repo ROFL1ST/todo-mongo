@@ -33,6 +33,7 @@ router.get("/todo/:id", Todo.getDetail);
 router.post("/todo", Todo.postTodo);
 router.post("/todo/add/:id", Todo.inviteUser);
 router.put("/todo/invitation/:id", Todo.invitationRespond);
+router.delete("/todo/kick/:id", Todo.kickUser);
 router.put("/todo/:id", Todo.updateTodo);
 router.put("/todo/role/:id", Todo.updateRole);
 

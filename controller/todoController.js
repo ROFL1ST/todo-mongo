@@ -305,11 +305,24 @@ class todo {
           message: "This user is already invited",
         });
       }
-      let checkUser = await ListUsersModel.findOne({
-        id_user: body.id_user,
-      });
-
-      if (checkUser) {
+      let check_list = await TodoModel.aggregate([
+        {
+          $lookup: {
+            from: "listusers",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "users",
+          },
+        },
+        {
+          $match: {
+            _id: new ObjectId(id),
+            "users.id_user": new ObjectId(body.invitedUser),
+          },
+        },
+      ]);
+      console.log(check_list);
+      if (check_list.length != 0) {
         return res.status(400).json({
           status: "Failed",
           message: "This user is already exist",
@@ -421,17 +434,30 @@ class todo {
         let check = await TodoModel.findOne({
           code: jwtDecode(invite_code).code,
         });
-        let check_list = await ListUsersModel.findOne({
-          id_user: jwtDecode(invite_code).id,
-        });
+        let check_list = await TodoModel.aggregate([
+          {
+            $lookup: {
+              from: "listusers",
+              localField: "_id",
+              foreignField: "id_todo",
+              as: "users",
+            },
+          },
+          {
+            $match: {
+              "users.id_user": new ObjectId(jwtDecode(invite_code).id),
+              code: jwtDecode(invite_code).code,
+            },
+          },
+        ]);
         if (!check) {
           return res.status(401).json({
             status: "Failed",
             message: "Token is not valid",
           });
         }
-
-        if (check_list) {
+        // console.log(check_list);
+        if (check_list.length != 0) {
           return res.status(401).json({
             status: "Failed",
             message: "You already joined this todo",
@@ -611,6 +637,67 @@ class todo {
       return res.status(200).json({
         status: "Success",
         data: body,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+
+  async kickUser(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const id_user = jwtDecode(headers.authorization).id;
+      const id = req.params.id;
+      const todo = await TodoModel.aggregate([
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "todolists",
+          },
+        },
+        {
+          $lookup: {
+            from: "listusers",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "user",
+          },
+        },
+        {
+          $match: {
+            "user.id_user": new ObjectId(id),
+            "user.id_user": { $exists: true }, // Check if "user" array exists
+            "user.id_user": new ObjectId(id_user),
+          },
+        },
+      ]);
+      console.log(todo);
+      if (todo.length == 0) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Todo or user is not in this server",
+        });
+      }
+      let listUser = todo[0].user.filter((i) => i.id_user == id_user);
+      // return console.log();
+      if (listUser[0].role != "owner") {
+        return res.status(401).json({
+          status: "Failed",
+          message: "You are not the owner of this todo",
+        });
+      }
+      let data = await ListUsersModel.findOneAndDelete(id);
+      return res.status(200).json({
+        status: "Success",
+        message: "Kick member success!",
+        data: data,
       });
     } catch (error) {
       console.log(error);
