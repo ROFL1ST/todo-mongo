@@ -44,3 +44,24 @@ Body
 | :------: | :------: | :-----: |
 | username | Required | String  |
 | password | Required | String  |
+
+## Register
+```markdown
+/register
+```
+**Method : POST**
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Optional | String |
+
+Body
+|    Name     |  Status  |          |
+| :-------: | :------: | :------: |
+| username  | Required | String  |
+| password     | Required | String   |
+| name       | Required | String   |
+
+
+
+
