@@ -11,7 +11,7 @@ https://github.com/Al-Ghozy03/kecamatan-jonggol.git](https://github.com/ROFL1ST/
 3. Create .env file, then copy this code below
 
 ```dotenv
-DB_HOST = [mongodb_host]
+DB_HOST = [mongodb_host]  <--- insert your mongodb
 JWT_ACCESS_TOKEN = [jwt_token]
 JWT_INVITATION_TOKEN = [jwt_invitation_token]
 
