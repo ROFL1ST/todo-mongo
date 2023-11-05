@@ -48,13 +48,18 @@ router.post(
   uploader.single("attach_url"),
   TodoList.postAttaches
 );
-router.get("/todo/get-attaches/:id", TodoList.getAttaches);
+router.get("/todo/attaches/:id", TodoList.getAttaches);
+router.delete("/todo/attaches/:id", TodoList.deleteAttaches);
+
 router.post("/todo/sublist/:id", TodoList.postSubList);
 router.put("/todo/sublist/:id", TodoList.updateSubList);
 router.delete("/todo/remove-list/:id", TodoList.deleteList);
+router.delete("/todo/remove-sub/:id", TodoList.deleteSub);
 
 // group chat
 router.get("/groupchat/:id", Chat.getRoom);
 router.get("/chat/:room_code", Chat.getMessageList);
+router.delete("/chat/:id", Chat.deleteMessage);
+
 
 module.exports = router;

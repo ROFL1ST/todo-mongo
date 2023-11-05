@@ -82,6 +82,6 @@ const subListSchema = mongoose.Schema({
 const TodoList = mongoose.model("todolists", todoListSchema);
 
 const SubList = mongoose.model("sublists", subListSchema);
-const attaches = mongoose.model("attaches", attachListSchema);
+const Attaches = mongoose.model("attaches", attachListSchema);
 
-module.exports = { TodoList, SubList, attaches };
+module.exports = { TodoList, SubList, Attaches };

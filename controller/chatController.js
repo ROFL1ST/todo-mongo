@@ -95,5 +95,40 @@ class chat {
       });
     }
   }
+
+  async deleteMessage(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const { id } = req.params;
+      const id_user = jwtDecode(headers.authorization).id;
+      console.log(id_user);
+      const data = await Message.aggregate([
+        {
+          $match: {
+            _id: new ObjectId(id),
+            id_user: new ObjectId(id_user),
+          },
+        },
+      ]);
+      // console.log(data);
+      if (data.length == 0) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Message's not found",
+        });
+      }
+      await Message.findByIdAndDelete(new ObjectId(id));
+      return res.status(200).json({
+        status: "Success",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
 }
 module.exports = new chat();

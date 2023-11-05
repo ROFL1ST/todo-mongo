@@ -1,4 +1,4 @@
-const { TodoList, attaches, SubList } = require("../models/todolistModel");
+const { TodoList, SubList, Attaches } = require("../models/todolistModel");
 const { TodoModel } = require("../models/todoModels");
 const { default: jwtDecode } = require("jwt-decode");
 const { default: mongoose } = require("mongoose");
@@ -323,8 +323,8 @@ class todoList {
       }
       const deleteTask = await TodoList.deleteOne({ _id: id });
       return res.status(200).json({
-        status: "Success"
-      })
+        status: "Success",
+      });
     } catch (error) {
       console.log(error);
       return res.status(500).json({
@@ -366,7 +366,8 @@ class todoList {
           },
         },
       ]);
-      if (!todo) {
+
+      if (todo.length == 0) {
         return res.status(404).json({
           status: "Failed",
           message: "Todo or user is not in this server",
@@ -396,7 +397,7 @@ class todoList {
           );
           body.attach_url = secure_url;
           body.public_id = public_id;
-          const attach = await attaches.create(body);
+          const attach = await Attaches.create(body);
           return res.status(200).json({
             status: "Success",
             message: "You have added attachment",
@@ -419,7 +420,7 @@ class todoList {
       const ObjectId = mongoose.Types.ObjectId;
       const id_user = jwtDecode(headers.authorization).id;
       const id = req.params.id;
-      const data = await attaches.aggregate([
+      const data = await Attaches.aggregate([
         {
           $match: { id_todoList: new ObjectId(id) },
         },
@@ -438,16 +439,87 @@ class todoList {
           },
         },
       ]);
-      if (data.length == 0) {
-        return res.status(404).json({
-          status: "Failed",
-          message: "List's not found",
-        });
-      }
-
       return res.status(200).json({
         status: "Success",
         data: data,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+
+  async deleteAttaches(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const id_user = jwtDecode(headers.authorization).id;
+      const id = req.params.id;
+
+      const todo = await TodoModel.aggregate([
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "todolists",
+          },
+        },
+        {
+          $lookup: {
+            from: "listusers",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "user",
+          },
+        },
+        {
+          $lookup: {
+            from: "attaches",
+            localField: "todolists._id",
+            foreignField: "id_todoList",
+            as: "attaches",
+          },
+        },
+        {
+          $match: {
+            "attaches._id": new ObjectId(id),
+            "user.id_user": { $exists: true }, // Check if "user" array exists
+            "user.id_user": new ObjectId(id_user),
+          },
+        },
+      ]);
+      // console.log(todo);
+      if (todo.length == 0) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Attach or user is not in this server",
+        });
+      }
+      let listUser = todo[0].user.filter((i) => i.id_user == id_user);
+      if (listUser[0].role == "member") {
+        return res.status(401).json({
+          status: "Failed",
+          message: "You are not the admin of this todo",
+        });
+      }
+      const data = await Attaches.findById(id);
+      if (!data) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Attach is not in this server",
+        });
+      }
+      // return console.log(data);
+      await cloudinary.uploader.destroy(data.public_id);
+      await Attaches.deleteOne({
+        _id: id,
+      });
+      return res.status(200).json({
+        status: "Success",
       });
     } catch (error) {
       console.log(error);
@@ -594,6 +666,74 @@ class todoList {
         status: "Success",
         message: "You've updated the sublist",
       });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+
+  async deleteSub(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const id_user = jwtDecode(headers.authorization).id;
+      const id = req.params.id;
+      const todo = await TodoModel.aggregate([
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "todolists",
+          },
+        },
+        {
+          $lookup: {
+            from: "listusers",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "user",
+          },
+        },
+        {
+          $lookup: {
+            from: "sublists",
+            localField: "todolists._id",
+            foreignField: "id_todoList",
+            as: "sublists",
+          },
+        },
+        {
+          $match: {
+            "sublists._id": new ObjectId(id),
+            "user.id_user": { $exists: true }, // Check if "user" array exists
+            "user.id_user": new ObjectId(id_user),
+          },
+        },
+      ]);
+      if (!todo) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Todo or user is not in this server",
+        });
+      } else {
+        let listUser = todo[0].user.filter((i) => i.id_user == id_user);
+        if (listUser[0].role == "member") {
+          return res.status(401).json({
+            status: "Failed",
+            message: "You are not the admin of this todo",
+          });
+        }
+        await SubList.deleteOne({
+          _id: new ObjectId(id),
+        });
+        return res.status(200).json({
+          status: "Success",
+        });
+      }
     } catch (error) {
       console.log(error);
       return res.status(500).json({
