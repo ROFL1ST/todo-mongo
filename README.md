@@ -29,7 +29,7 @@ API_SECRET_CLOUD = [secret_cloud]
 ## Login
 
 ```markdown
-/todo/login
+/login
 ```
 **Method : POST**
 Headers
