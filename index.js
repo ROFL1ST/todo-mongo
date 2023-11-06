@@ -17,7 +17,7 @@ app.use("/api", router);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:2000", // Replace with your front-end's URL
+    origin: "http://localhost:2000/", // Replace with your front-end's URL
     methods: ["GET", "POST"],
   },
 });
