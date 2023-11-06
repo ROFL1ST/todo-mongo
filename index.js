@@ -1,4 +1,6 @@
 require("dotenv").config();
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
 const express = require("express");
 const mongoose = require("mongoose");
 const { isOnline, isOffline } = require("./controller/userController");
@@ -7,8 +9,9 @@ const router = require("./routes/routes");
 const { Server } = require("socket.io");
 const http = require("http");
 const { sendMessage } = require("./controller/chatController");
+admin.initializeApp();
 const app = express();
-const port = process.env.PORT || 8000;
+const port = process.env.PORT || 9000;
 const uri = process.env.DB_HOST;
 const dbName = process.env.DB_DATABASE;
 app.use(cors());
@@ -55,5 +58,5 @@ io.on("connection", (socket) => {
     isOffline(data);
   });
 });
-
 server.listen(port);
+exports.api = functions.https.onRequest(app);

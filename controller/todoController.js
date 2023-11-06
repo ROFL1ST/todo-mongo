@@ -297,7 +297,6 @@ class todo {
         }
         await TodoList.deleteMany({ _id: { $in: todoListIds } });
       }
-      // return console.log(todo[0].lists);
       await ListUsersModel.deleteMany({ id_todo: new ObjectId(id) });
       await InvitationalModel.deleteMany({ id_todo: new ObjectId(id) });
       await TodoModel.deleteOne({ _id: new ObjectId(id) });
