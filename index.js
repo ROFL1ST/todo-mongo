@@ -4,18 +4,18 @@ const mongoose = require("mongoose");
 const { isOnline, isOffline } = require("./controller/userController");
 const cors = require("cors");
 const router = require("./routes/routes");
+const app = express(); 
 const { Server } = require("socket.io");
-const http = require("http");
+const { createServer } = require("http");
+const server = createServer(app);
+const io = new Server(server);
 const { sendMessage } = require("./controller/chatController");
-const app = express();
 const port = process.env.PORT || 9000;
 const uri = process.env.DB_HOST;
 const dbName = process.env.DB_DATABASE;
 app.use(cors());
 app.use(express.json());
 app.use("/api", router);
-const server = http.createServer(app);
-const io = new Server(server, cors());
 mongoose
   .connect(uri)
   .then(() => {
