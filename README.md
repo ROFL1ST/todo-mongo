@@ -161,6 +161,56 @@ Headers
 | :-----------: | :------: | :----: |
 | Authorization | Required | String |
 
+### Post Todo
+```markdown
+/todo
+```
+
+**Method: Post**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name     |  Status  |          |
+| :-------: | :------: | :------: |
+| name     | Required | String   |
+| description | Required | String   |
+
+### Update Todo
+```markdown
+/todo/[id]
+```
+
+**Method: Put**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name     |  Status  |          |
+| :-------: | :------: | :------: |
+| name     | Optional | String   |
+| description | Optional | String   |
+| percent | Optional | String   |
+
+### Delete Todo
+```markdown
+/todo/[id]
+```
+
+**Method: Delete**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+## Todo List
 
 
 
