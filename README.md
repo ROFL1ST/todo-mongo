@@ -24,7 +24,9 @@ API_SECRET_CLOUD = [secret_cloud]
 ```
 4. run "npm start"
 
-**BASE URL** = http://localhost:9000/api/
+**LOCAL URL** = http://localhost:9000/api/
+
+**LOCAL URL** = https://todo-mongo-api-production.up.railway.app/api/
 
 
 ## User
