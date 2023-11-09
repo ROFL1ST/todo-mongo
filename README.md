@@ -26,7 +26,7 @@ API_SECRET_CLOUD = [secret_cloud]
 
 **LOCAL URL** = http://localhost:9000/api/
 
-**LOCAL URL** = https://todo-mongo-api-production.up.railway.app/api/
+**ONLINE URL** = https://todo-mongo-api-production.up.railway.app/api/
 
 
 ## User
