@@ -114,6 +114,56 @@ Headers
 | :-----------: | :------: | :----: |
 | Authorization | Required | String |
 
+### Profile
+
+```markdown
+/profile
+```
+
+**Method: GET**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+## Todo
+
+### Get todo
+```markdown
+/todo
+```
+
+**Method: Get**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Params
+|    Name     |  Status  | 
+| :-------: | :------: |
+| page  | Optional |
+| limit | Optional     |
+| key    | Optional |
+
+### get detail
+
+```markdown
+/todo/[id]
+```
+
+**Method: Get**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+
+
+
 
 
 
