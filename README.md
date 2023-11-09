@@ -210,8 +210,87 @@ Headers
 | :-----------: | :------: | :----: |
 | Authorization | Required | String |
 
+### Invite user
+```markdown
+/todo/add/[id]
+```
+
+**Method: Post**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name     |  Status  |          |
+| :-------: | :------: | :------: |
+| invitedUser | Required | String   |
+
+### get invitation
+```markdown
+/todo/invitation
+```
+
+**Method: Get**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+### invitation respond
+```markdown
+/todo/invitation
+```
+
+**Method: Put**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name     |  Status  |          |
+| :-------: | :------: | :------: |
+| status   | Required | ["accepted", "rejected"] |
+
+### kick user (Only For Owner)
+
+```markdown
+/todo/kick/[id]
+```
+
+**Method: Delete**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+### update role (only for owner)
+
+```markdown
+/todo/role/[id]
+```
+
+**Method: Put**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name   |  Status  |          |
+| :-------: | :------: | :------: |
+| role      | Required | String   |
+
+
 ## Todo List
 
+### 
 
 
 
