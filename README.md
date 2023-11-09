@@ -269,7 +269,7 @@ Headers
 | :-----------: | :------: | :----: |
 | Authorization | Required | String |
 
-### update role (only for owner)
+### update role (Only For Owner)
 
 ```markdown
 /todo/role/[id]
@@ -290,7 +290,90 @@ Body
 
 ## Todo List
 
-### 
+### Get List
+
+```markdown
+/todo/list/[id]
+```
+
+**Method: Get**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+### Detail List
+
+```markdown
+/todo/detail-list/[id]
+```
+
+**Method: Get**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+### Post List
+
+```markdown
+/todo/createList
+```
+
+**Method: Post**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name   |  Status  |          |
+| :-------: | :------: | :------: |
+| id_todo      | Required | String   |
+| name      | Required | String   |
+| start      | Required | Date   |
+| end      | Required | Date   |
+
+### Update List
+
+```markdown
+/todo/list/[id]
+```
+
+**Method: Put**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name   |  Status  |          |
+| :-------: | :------: | :------: |
+| name      | Optional | String   |
+| start      | Optional | Date   |
+| end      | Optional | Date   |
+| priority      | Optional | ["low", "normal", "high", "urgent"]   |
+| status      | Optional | ["open", "pending", "in progress", "completed"]   |
+
+### Delete List
+
+```markdown
+/todo/remove-list/[id]
+```
+
+**Method: Delete**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+
+
 
 
 
