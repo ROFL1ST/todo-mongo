@@ -29,7 +29,7 @@ API_SECRET_CLOUD = [secret_cloud]
 
 ## User
 
-# Login
+#### Login
 
 ```markdown
 /login
@@ -48,7 +48,7 @@ Body
 | username | Required | String  |
 | password | Required | String  |
 
-# Register
+#### Register
 ```markdown
 /register
 ```
@@ -65,7 +65,7 @@ Body
 | password     | Required | String   |
 | name       | Required | String   |
 
-# update profile
+#### update profile
 ```markdown
 /user
 ```
@@ -84,7 +84,7 @@ Body
 | name     | Optional | String   |
 | photo_profile | Optional | File   |
 
-# Search user
+#### Search user
 
 ```markdown
 /user
@@ -103,7 +103,7 @@ Params
 | name     | Optional |
 
 
-# Detail User
+#### Detail User
 ```markdown
 /user/[id]
 ```
