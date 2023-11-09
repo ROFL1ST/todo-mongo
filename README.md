@@ -26,7 +26,10 @@ API_SECRET_CLOUD = [secret_cloud]
 
 **BASE URL** = http://localhost:8000/api/
 
-## Login
+
+## User
+
+# Login
 
 ```markdown
 /login
@@ -45,7 +48,7 @@ Body
 | username | Required | String  |
 | password | Required | String  |
 
-## Register
+# Register
 ```markdown
 /register
 ```
@@ -61,6 +64,59 @@ Body
 | username  | Required | String  |
 | password     | Required | String   |
 | name       | Required | String   |
+
+# update profile
+```markdown
+/user
+```
+**Method : PUT**
+Headers
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name     |  Status  |          |
+| :-------: | :------: | :------: |
+| username  | Optional | String  |
+| name     | Optional | String   |
+| photo_profile | Optional | File   |
+
+# Search user
+
+```markdown
+/user
+```
+**Method : GET**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Params
+|    Name     |  Status  | 
+| :-------: | :------: |
+| username  | Optional |
+| name     | Optional |
+
+
+# Detail User
+```markdown
+/user/[id]
+```
+**Method : GET**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+
+
+
 
 
 

@@ -157,9 +157,7 @@ class userControl {
             _id: new ObjectId(id),
           },
         },
-        {
-          $unwind: "$todo",
-        },
+      
         {
           $project: {
             password: 0,
