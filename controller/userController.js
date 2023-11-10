@@ -5,7 +5,8 @@ const jwt = require("jsonwebtoken");
 const { default: mongoose } = require("mongoose");
 const cloudinary = require("cloudinary").v2;
 const { default: jwtDecode } = require("jwt-decode");
-
+const { sendEmail } = require("../mail");
+const crypto = require("crypto");
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.API_KEY_CLOUD,
@@ -14,6 +15,8 @@ cloudinary.config({
 class userControl {
   async register(req, res) {
     try {
+      const ObjectId = mongoose.Types.ObjectId;
+
       const body = req.body;
       if (
         !body ||
@@ -44,17 +47,40 @@ class userControl {
           message: "Your username is already exist",
         });
       }
-
+      let kode = crypto.randomBytes(32).toString("hex");
+      body.kode = kode;
       body.password = bcrypt.hashSync(body.password, 10);
       let newUser = await userModel.create(body);
       const token = jwt.sign(
-        { username: newUser.username, id: newUser._id },
+        { email: body.email, id: newUser._id },
         process.env.JWT_ACCESS_TOKEN
       );
+      await userModel.updateOne(
+        {
+          _id: new ObjectId(jwtDecode(token).id),
+        },
+        { $set: { token: token } }
+      );
+
+      const link = `${process.env.MAIL_CLIENT_URL}/verify/${kode}`;
+      const context = {
+        url: link,
+      };
+      const mail = await sendEmail(
+        newUser.email,
+        "Verify email",
+        "verify_email",
+        context
+      );
+      if (mail == " error") {
+        return res.status(422).json({
+          status: "Failed",
+          message: "Email's not sent",
+        });
+      }
       res.status(200).json({
         status: "Success",
         message: "Berhasil",
-        token: token,
       });
     } catch (error) {
       console.log(error);
@@ -65,6 +91,35 @@ class userControl {
       });
     }
   }
+
+  async verify(req, res) {
+    try {
+      const ObjectId = mongoose.Types.ObjectId;
+      const { id } = req.params;
+      const user = await userModel.findOne({ kode: id });
+      console.log(id);
+      if (!user) {
+        return res.status(404).json({ message: "Invalid verification code" });
+      }
+      await userModel.updateOne(
+        {
+          kode: id,
+        },
+        {
+          $set: { isVerified: true },
+        }
+      );
+      return res.sendFile(__dirname + "/public/verification-success.html");
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({
+        status: "Failed",
+        message: "Something's wrong",
+        error: error,
+      });
+    }
+  }
+
   async isOnline(id) {
     await userModel.updateOne({ _id: id }, { $set: { status: "online" } });
   }
@@ -72,6 +127,7 @@ class userControl {
     await userModel.updateOne({ _id: id }, { $set: { status: "offline" } });
   }
   async login(req, res) {
+    const ObjectId = mongoose.Types.ObjectId;
     try {
       let body = req.body;
       let isUserExist = await userModel.findOne({
@@ -91,9 +147,21 @@ class userControl {
           message: "Your password's wrong",
         });
       }
+      if (!isUserExist.isVerified) {
+        return res.status(401).json({
+          status: "Failed",
+          message: "Your email's not verified. Check your email",
+        });
+      }
       const token = jwt.sign(
-        { username: isUserExist.username, id: isUserExist._id },
+        { email: isUserExist.email, id: isUserExist._id },
         process.env.JWT_ACCESS_TOKEN
+      );
+      await userModel.updateOne(
+        {
+          _id: new ObjectId(jwtDecode(token).id),
+        },
+        { $set: { token: token } }
       );
       return res.status(200).json({
         status: "Success",
@@ -173,7 +241,7 @@ class userControl {
             _id: new ObjectId(id),
           },
         },
-      
+
         {
           $project: {
             password: 0,

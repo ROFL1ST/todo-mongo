@@ -15,7 +15,7 @@ router.get("/", (req, res) => {
 // user
 router.post("/register", userControl.register);
 router.post("/login", userControl.login);
-
+router.get("/verify/:id", userControl.verify);
 router.use(jwtMiddleWare);
 router.put(
   "/user",
@@ -62,6 +62,5 @@ router.delete("/todo/remove-sub/:id", TodoList.deleteSub);
 router.get("/groupchat/:id", Chat.getRoom);
 router.get("/chat/:room_code", Chat.getMessageList);
 router.delete("/chat/:id", Chat.deleteMessage);
-
 
 module.exports = router;

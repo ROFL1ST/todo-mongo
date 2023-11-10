@@ -11,13 +11,25 @@ const userSchema = mongoose.Schema(
       required: [true, "Please enter your password"],
       min: [8, "Minimum 8 characters"],
     },
-    email : {
+    email: {
       type: String,
       required: [true, "Please enter your fullname"],
     },
     name: {
       type: String,
       required: [true, "Please enter your fullname"],
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    token: {
+      type: String,
+      default: null,
+    },
+    kode: {
+      type: String,
+      required: true
     },
     photo_profile: {
       type: String,
