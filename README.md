@@ -21,6 +21,14 @@ process.env.PORT = 8000
 CLOUD_NAME = [cloud_name]
 API_KEY_CLOUD = [cloud_key]
 API_SECRET_CLOUD = [secret_cloud]
+
+MAIL_HOST = [host_mail]
+MAIL_PORT = [port]
+MAIL_USERNAME = [mail_username]
+MAIL_PASSWORD = [mail_password]
+MAIL_CLIENT_URL = [url]
+EMAIL_MAIL= [your_email]
+EMAIL_PASSWORD = [your_password]
 ```
 4. run "npm start"
 
@@ -63,6 +71,7 @@ Headers
 Body
 |    Name     |  Status  |          |
 | :-------: | :------: | :------: |
+| email  | Required | String  |
 | username  | Required | String  |
 | password     | Required | String   |
 | name       | Required | String   |
