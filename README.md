@@ -55,6 +55,7 @@ Body
 
 |   Name   |  Status  |         |
 | :------: | :------: | :-----: |
+| email    | Required | String  |
 | username | Required | String  |
 | password | Required | String  |
 
