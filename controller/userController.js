@@ -15,20 +15,36 @@ class userControl {
   async register(req, res) {
     try {
       const body = req.body;
-      if (!body || !body.username || !body.name || !body.password)
+      if (
+        !body ||
+        !body.email ||
+        !body.username ||
+        !body.name ||
+        !body.password
+      )
         return res.status(400).json({
           status: "Failed",
           message: "Please enter your username, password and name correctly",
         });
-      let isUserExist = await userModel.findOne({
+      let isEmailExist = await userModel.findOne({
+        email: body.email,
+      });
+      if (isEmailExist) {
+        return res.status(400).json({
+          status: "Failed",
+          message: "Your email is already exist",
+        });
+      }
+      let isUsernameExist = await userModel.findOne({
         username: body.username,
       });
-      if (isUserExist) {
+      if (isUsernameExist) {
         return res.status(400).json({
           status: "Failed",
           message: "Your username is already exist",
         });
       }
+
       body.password = bcrypt.hashSync(body.password, 10);
       let newUser = await userModel.create(body);
       const token = jwt.sign(

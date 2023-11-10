@@ -24,12 +24,14 @@ API_SECRET_CLOUD = [secret_cloud]
 ```
 4. run "npm start"
 
-**BASE URL** = http://localhost:9000/api/
+**LOCAL URL** = http://localhost:9000/api/
+
+**ONLINE URL** = https://todo-mongo-api-production.up.railway.app/api/
 
 
 ## User
 
-# Login
+#### Login
 
 ```markdown
 /login
@@ -48,7 +50,7 @@ Body
 | username | Required | String  |
 | password | Required | String  |
 
-# Register
+#### Register
 ```markdown
 /register
 ```
@@ -65,7 +67,7 @@ Body
 | password     | Required | String   |
 | name       | Required | String   |
 
-# update profile
+#### update profile
 ```markdown
 /user
 ```
@@ -84,7 +86,7 @@ Body
 | name     | Optional | String   |
 | photo_profile | Optional | File   |
 
-# Search user
+#### Search user
 
 ```markdown
 /user
@@ -103,7 +105,7 @@ Params
 | name     | Optional |
 
 
-# Detail User
+#### Detail User
 ```markdown
 /user/[id]
 ```
@@ -113,6 +115,268 @@ Headers
 |     Name      |  Status  |        |
 | :-----------: | :------: | :----: |
 | Authorization | Required | String |
+
+### Profile
+
+```markdown
+/profile
+```
+
+**Method: GET**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+## Todo
+
+### Get todo
+```markdown
+/todo
+```
+
+**Method: Get**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Params
+|    Name     |  Status  | 
+| :-------: | :------: |
+| page  | Optional |
+| limit | Optional     |
+| key    | Optional |
+
+### get detail
+
+```markdown
+/todo/[id]
+```
+
+**Method: Get**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+### Post Todo
+```markdown
+/todo
+```
+
+**Method: Post**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name     |  Status  |          |
+| :-------: | :------: | :------: |
+| name     | Required | String   |
+| description | Required | String   |
+
+### Update Todo
+```markdown
+/todo/[id]
+```
+
+**Method: Put**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name     |  Status  |          |
+| :-------: | :------: | :------: |
+| name     | Optional | String   |
+| description | Optional | String   |
+| percent | Optional | String   |
+
+### Delete Todo
+```markdown
+/todo/[id]
+```
+
+**Method: Delete**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+### Invite user
+```markdown
+/todo/add/[id]
+```
+
+**Method: Post**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name     |  Status  |          |
+| :-------: | :------: | :------: |
+| invitedUser | Required | String   |
+
+### get invitation
+```markdown
+/todo/invitation
+```
+
+**Method: Get**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+### invitation respond
+```markdown
+/todo/invitation
+```
+
+**Method: Put**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name     |  Status  |          |
+| :-------: | :------: | :------: |
+| status   | Required | ["accepted", "rejected"] |
+
+### kick user (Only For Owner)
+
+```markdown
+/todo/kick/[id]
+```
+
+**Method: Delete**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+### update role (Only For Owner)
+
+```markdown
+/todo/role/[id]
+```
+
+**Method: Put**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name   |  Status  |          |
+| :-------: | :------: | :------: |
+| role      | Required | String   |
+
+
+## Todo List
+
+### Get List
+
+```markdown
+/todo/list/[id]
+```
+
+**Method: Get**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+### Detail List
+
+```markdown
+/todo/detail-list/[id]
+```
+
+**Method: Get**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+### Post List
+
+```markdown
+/todo/createList
+```
+
+**Method: Post**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name   |  Status  |          |
+| :-------: | :------: | :------: |
+| id_todo      | Required | String   |
+| name      | Required | String   |
+| start      | Required | Date   |
+| end      | Required | Date   |
+
+### Update List
+
+```markdown
+/todo/list/[id]
+```
+
+**Method: Put**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+Body
+|    Name   |  Status  |          |
+| :-------: | :------: | :------: |
+| name      | Optional | String   |
+| start      | Optional | Date   |
+| end      | Optional | Date   |
+| priority      | Optional | ["low", "normal", "high", "urgent"]   |
+| status      | Optional | ["open", "pending", "in progress", "completed"]   |
+
+### Delete List
+
+```markdown
+/todo/remove-list/[id]
+```
+
+**Method: Delete**
+
+Headers
+|     Name      |  Status  |        |
+| :-----------: | :------: | :----: |
+| Authorization | Required | String |
+
+
+
+
 
 
 
