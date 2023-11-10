@@ -16,7 +16,7 @@ async function jwtMiddleWare(req, res, next) {
         message: "Token is not valid",
       });
     } else {
-      const user = await userModel.findOne({ username: decode.username });
+      const user = await userModel.findOne({ email: decode.email });
       if (!user) {
         return res.json({
           status: "Failed",
