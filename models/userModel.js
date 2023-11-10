@@ -1,3 +1,4 @@
+const { ObjectId } = require("bson");
 const mongoose = require("mongoose");
 
 const userSchema = mongoose.Schema(
@@ -29,7 +30,7 @@ const userSchema = mongoose.Schema(
     },
     kode: {
       type: String,
-      required: true
+      required: true,
     },
     photo_profile: {
       type: String,
@@ -50,6 +51,18 @@ const userSchema = mongoose.Schema(
   }
 );
 
-const User = mongoose.model("users", userSchema);
+const forgotModel = mongoose.Schema({
+  id_user: {
+    type: ObjectId,
+    required: true,
+  },
+  code: {
+    type: String,
+    required: true,
+  },
+});
 
-module.exports = User;
+const User = mongoose.model("users", userSchema);
+const Forgot = mongoose.model("forgots", forgotModel);
+
+module.exports = {User, Forgot};

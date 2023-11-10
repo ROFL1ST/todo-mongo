@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const userModel = require("../models/userModel");
+const {User} = require("../models/userModel");
 
 async function jwtMiddleWare(req, res, next) {
   const { authorization } = req.headers;
@@ -16,7 +16,7 @@ async function jwtMiddleWare(req, res, next) {
         message: "Token is not valid",
       });
     } else {
-      const user = await userModel.findOne({ email: decode.email });
+      const user = await User.findOne({ email: decode.email });
       if (!user) {
         return res.json({
           status: "Failed",

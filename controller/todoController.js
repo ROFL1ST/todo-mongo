@@ -125,10 +125,10 @@ class todo {
           },
         },
         {
-          $skip: size,
+          $skip: page == undefined ? 1 : size,
         },
         {
-          $limit: parseInt(limit),
+          $limit: limit == undefined ? 8 : parseInt(limit),
         },
       ]);
 

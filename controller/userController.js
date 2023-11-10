@@ -1,4 +1,4 @@
-const userModel = require("../models/userModel");
+const { User, Forgot } = require("../models/userModel");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
@@ -29,7 +29,7 @@ class userControl {
           status: "Failed",
           message: "Please enter your username, password and name correctly",
         });
-      let isEmailExist = await userModel.findOne({
+      let isEmailExist = await User.findOne({
         email: body.email,
       });
       if (isEmailExist) {
@@ -38,7 +38,7 @@ class userControl {
           message: "Your email is already exist",
         });
       }
-      let isUsernameExist = await userModel.findOne({
+      let isUsernameExist = await User.findOne({
         username: body.username,
       });
       if (isUsernameExist) {
@@ -50,12 +50,12 @@ class userControl {
       let kode = crypto.randomBytes(32).toString("hex");
       body.kode = kode;
       body.password = bcrypt.hashSync(body.password, 10);
-      let newUser = await userModel.create(body);
+      let newUser = await User.create(body);
       const token = jwt.sign(
         { email: body.email, id: newUser._id },
         process.env.JWT_ACCESS_TOKEN
       );
-      await userModel.updateOne(
+      await User.updateOne(
         {
           _id: new ObjectId(jwtDecode(token).id),
         },
@@ -80,7 +80,7 @@ class userControl {
       }
       res.status(200).json({
         status: "Success",
-        message: "Berhasil",
+        message: "Verification has been sent to your email",
       });
     } catch (error) {
       console.log(error);
@@ -96,13 +96,13 @@ class userControl {
     try {
       const ObjectId = mongoose.Types.ObjectId;
       const { id } = req.params;
-      const user = await userModel.findOne({ kode: id });
+      const user = await User.findOne({ kode: id });
       console.log(id);
       if (!user) {
         return res.status(404).json({ message: "Invalid verification code" });
       }
       const randomCode = Math.random().toString(36).substring(2, 8);
-      await userModel.updateOne(
+      await User.updateOne(
         {
           kode: id,
         },
@@ -122,16 +122,16 @@ class userControl {
   }
 
   async isOnline(id) {
-    await userModel.updateOne({ _id: id }, { $set: { status: "online" } });
+    await User.updateOne({ _id: id }, { $set: { status: "online" } });
   }
   async isOffline(id) {
-    await userModel.updateOne({ _id: id }, { $set: { status: "offline" } });
+    await User.updateOne({ _id: id }, { $set: { status: "offline" } });
   }
   async login(req, res) {
     const ObjectId = mongoose.Types.ObjectId;
     try {
       let body = req.body;
-      let isUserExist = await userModel.findOne({
+      let isUserExist = await User.findOne({
         username: body.username,
       });
       if (!isUserExist) {
@@ -158,7 +158,7 @@ class userControl {
         { email: isUserExist.email, id: isUserExist._id },
         process.env.JWT_ACCESS_TOKEN
       );
-      await userModel.updateOne(
+      await User.updateOne(
         {
           _id: new ObjectId(jwtDecode(token).id),
         },
@@ -175,12 +175,173 @@ class userControl {
       });
     }
   }
+  async forgot_password(req, res) {
+    try {
+      const ObjectId = mongoose.Types.ObjectId;
+
+      const { email } = req.body;
+      const data = await User.findOne({ email: email });
+      if (!data) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "User's not found",
+        });
+      }
+      const check = await Forgot.findOne({ id_user: new ObjectId(data._id) });
+      if (check) {
+        return res.status(401).json({
+          status: "Failed",
+          message: "You have sent the code",
+        });
+      }
+      const code = Math.floor(1000 + Math.random() * 9000);
+      const context = {
+        code: code,
+        name: data.name,
+      };
+      const mail = await sendEmail(
+        email,
+        "Forgot Password",
+        "forgot_password",
+        context
+      );
+      if (mail == " error") {
+        return res.status(422).json({
+          status: "Failed",
+          message: "Email's not sent",
+        });
+      }
+      await Forgot.create({
+        id_user: data._id,
+        code: code,
+      });
+      return res.status(200).json({
+        status: "Success",
+        message: "The code has been sent to your email",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+      });
+    }
+  }
+  async resendEmail(req, res) {
+    try {
+      const { email } = req.body;
+      const data = await User.findOne({ email: email });
+      if (!data) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "User's not found",
+        });
+      }
+
+      const code = Math.floor(1000 + Math.random() * 9000);
+      const context = {
+        code: code,
+        name: data.name,
+      };
+      const mail = await sendEmail(
+        email,
+        "Forgot Password",
+        "forgot_password",
+        context
+      );
+      if (mail == " error") {
+        return res.status(422).json({
+          status: "Failed",
+          message: "Email's not sent",
+        });
+      }
+      await Forgot.deleteOne({
+        id_user: data._id,
+      });
+      await Forgot.create({
+        id_user: data._id,
+        code: code,
+      });
+      return res.status(200).json({
+        status: "Success",
+        message: "The code has been sent to your email",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+      });
+    }
+  }
+  async verifyForgot(req, res) {
+    try {
+      const ObjectId = mongoose.Types.ObjectId;
+
+      const { email } = req.params;
+      const { code } = req.body;
+      const data = await User.findOne({ email: email });
+      if (!data) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "User's not found",
+        });
+      }
+      const check = await Forgot.findOne({ code: code });
+      if (!check) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Code's not found",
+        });
+      }
+      if (check.code != code) {
+        return res.status(401).json({
+          status: "Failed",
+          message: "Code's not valid",
+        });
+      }
+      await Forgot.deleteOne({ id_user: new ObjectId(data._id) });
+      return res
+        .status(200)
+        .json({ status: "Success", message: "success to verify code" });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+  async resetPassword(req, res) {
+    try {
+      let body = req.body;
+      const ObjectId = mongoose.Types.ObjectId;
+      const data = await User.findOne({ email: body.email });
+      if (!data) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "User's not found",
+        });
+      }
+      body.password = bcrypt.hashSync(body.password, 10);
+      await User.updateOne({ _id: new ObjectId(data._id) });
+      return res.status(200).json({
+        status: "Success",
+        message: "Password's updated",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
   async profile(req, res) {
     try {
       const headers = req.headers;
       const ObjectId = mongoose.Types.ObjectId;
       let { id } = jwtDecode(headers.authorization);
-      const data = await userModel.aggregate([
+      console.log(id);
+      const data = await User.aggregate([
         {
           $lookup: {
             from: "todos",
@@ -195,12 +356,11 @@ class userControl {
           },
         },
         {
-          $unwind: "$todo",
-        },
-        {
           $project: {
             password: 0,
             "todo.code": 0,
+            token: 0,
+            isVerified: 0,
           },
         },
       ]);
@@ -228,7 +388,7 @@ class userControl {
     try {
       const ObjectId = mongoose.Types.ObjectId;
       const { id } = req.params;
-      const data = await userModel.aggregate([
+      const data = await User.aggregate([
         {
           $lookup: {
             from: "todos",
@@ -276,7 +436,7 @@ class userControl {
       const ObjectId = mongoose.Types.ObjectId;
       let id = jwtDecode(headers.authorization).id;
       let body = req.body;
-      let checkUser = await userModel.find({ _id: new ObjectId(id) });
+      let checkUser = await User.find({ _id: new ObjectId(id) });
       if (!checkUser) {
         return res.status(404).json({
           status: "Failed",
@@ -297,7 +457,7 @@ class userControl {
         body.photo_profile = checkUser.photo_profile;
         body.public_id = checkUser.public_id;
       }
-      await userModel.updateOne(
+      await User.updateOne(
         { _id: new ObjectId(id) },
         {
           $set: {
@@ -324,7 +484,7 @@ class userControl {
     try {
       const { page, limit, key } = req.query;
       const size = (parseInt(page) - 1) * parseInt(limit);
-      let user = await userModel.aggregate([
+      let user = await User.aggregate([
         {
           $project: {
             username: "$username",
