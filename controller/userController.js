@@ -101,12 +101,13 @@ class userControl {
       if (!user) {
         return res.status(404).json({ message: "Invalid verification code" });
       }
+      const randomCode = Math.random().toString(36).substring(2, 8);
       await userModel.updateOne(
         {
           kode: id,
         },
         {
-          $set: { isVerified: true },
+          $set: { isVerified: true, kode: randomCode },
         }
       );
       return res.sendFile(__dirname + "/public/verification-success.html");
