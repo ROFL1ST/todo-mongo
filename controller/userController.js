@@ -1,4 +1,4 @@
-const { User, Forgot } = require("../models/userModel");
+const { User, Forgot, Verify } = require("../models/userModel");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
@@ -47,20 +47,11 @@ class userControl {
           message: "Your username is already exist",
         });
       }
-      let kode = crypto.randomBytes(32).toString("hex");
-      body.kode = kode;
+
       body.password = bcrypt.hashSync(body.password, 10);
       let newUser = await User.create(body);
-      const token = jwt.sign(
-        { email: body.email, id: newUser._id },
-        process.env.JWT_ACCESS_TOKEN
-      );
-      await User.updateOne(
-        {
-          _id: new ObjectId(jwtDecode(token).id),
-        },
-        { $set: { token: token } }
-      );
+
+      let kode = crypto.randomBytes(32).toString("hex");
 
       const link = `${process.env.MAIL_CLIENT_URL}/verify/${kode}`;
       const context = {
@@ -78,6 +69,10 @@ class userControl {
           message: "Email's not sent",
         });
       }
+      await Verify.create({
+        id_user: new ObjectId(newUser._id),
+        code: kode,
+      });
       res.status(200).json({
         status: "Success",
         message: "Verification has been sent to your email",
@@ -96,20 +91,23 @@ class userControl {
     try {
       const ObjectId = mongoose.Types.ObjectId;
       const { id } = req.params;
-      const user = await User.findOne({ kode: id });
-      console.log(id);
+      const user = await Verify.findOne({ code: id });
+      console.log(user);
       if (!user) {
         return res.status(404).json({ message: "Invalid verification code" });
       }
-      const randomCode = Math.random().toString(36).substring(2, 8);
+
       await User.updateOne(
         {
-          kode: id,
+          _id: new ObjectId(user.id_user),
         },
         {
-          $set: { isVerified: true, kode: randomCode },
+          $set: { isVerified: true },
         }
       );
+      await Verify.deleteOne({
+        code: id,
+      });
       return res.sendFile(__dirname + "/public/verification-success.html");
     } catch (error) {
       console.log(error);
@@ -195,9 +193,14 @@ class userControl {
         });
       }
       const code = Math.floor(1000 + Math.random() * 9000);
+      const today = new Date();
+      const expirationDate = new Date(today);
+      expirationDate.setDate(today.getDate() + 7);
+      let expired = expirationDate.toISOString();
       const context = {
         code: code,
         name: data.name,
+        dateExpired: expired,
       };
       const mail = await sendEmail(
         email,
@@ -214,6 +217,7 @@ class userControl {
       await Forgot.create({
         id_user: data._id,
         code: code,
+        dateExpired: expired,
       });
       return res.status(200).json({
         status: "Success",
@@ -238,9 +242,14 @@ class userControl {
       }
 
       const code = Math.floor(1000 + Math.random() * 9000);
+      const today = new Date();
+      const expirationDate = new Date(today);
+      expirationDate.setDate(today.getDate() + 7);
+      let expired = expirationDate.toISOString();
       const context = {
         code: code,
         name: data.name,
+        dateExpired: expired,
       };
       const mail = await sendEmail(
         email,
@@ -260,6 +269,7 @@ class userControl {
       await Forgot.create({
         id_user: data._id,
         code: code,
+        dateExpired: expired,
       });
       return res.status(200).json({
         status: "Success",
@@ -274,8 +284,6 @@ class userControl {
   }
   async verifyForgot(req, res) {
     try {
-      const ObjectId = mongoose.Types.ObjectId;
-
       const { email } = req.params;
       const { code } = req.body;
       const data = await User.findOne({ email: email });
@@ -298,7 +306,14 @@ class userControl {
           message: "Code's not valid",
         });
       }
-      await Forgot.deleteOne({ id_user: new ObjectId(data._id) });
+      // check expired
+      const currentTime = new Date().getTime();
+      if (currentTime > check.dateExpired) {
+        return res.status(401).json({
+          status: "Failed",
+          message: "Code's expired. Please generate a new code",
+        });
+      }
       return res
         .status(200)
         .json({ status: "Success", message: "success to verify code" });
@@ -312,6 +327,7 @@ class userControl {
   }
   async resetPassword(req, res) {
     try {
+      let { code } = req.params;
       let body = req.body;
       const ObjectId = mongoose.Types.ObjectId;
       const data = await User.findOne({ email: body.email });
@@ -321,6 +337,20 @@ class userControl {
           message: "User's not found",
         });
       }
+      const check = await Forgot.findOne({ code: code });
+      if (!check) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Code's not found",
+        });
+      }
+      if (check.code != code) {
+        return res.status(401).json({
+          status: "Failed",
+          message: "Code's not valid",
+        });
+      }
+      await Forgot.deleteOne({ id_user: new ObjectId(data._id) });
       body.password = bcrypt.hashSync(body.password, 10);
       await User.updateOne({ _id: new ObjectId(data._id) });
       return res.status(200).json({
@@ -360,7 +390,6 @@ class userControl {
             password: 0,
             "todo.code": 0,
             token: 0,
-            isVerified: 0,
           },
         },
       ]);

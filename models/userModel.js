@@ -28,10 +28,7 @@ const userSchema = mongoose.Schema(
       type: String,
       default: null,
     },
-    kode: {
-      type: String,
-      required: true,
-    },
+
     photo_profile: {
       type: String,
       default: null,
@@ -51,18 +48,36 @@ const userSchema = mongoose.Schema(
   }
 );
 
+const verifyModel = mongoose.Schema({
+  id_user: {
+    type: ObjectId,
+    ref: "users",
+    required: true,
+  },
+  code: {
+    type: String,
+    unique: true,
+    required: true,
+  },
+});
 const forgotModel = mongoose.Schema({
   id_user: {
     type: ObjectId,
+    ref: "users",
     required: true,
   },
   code: {
     type: String,
     required: true,
   },
+  dateExpired: {
+    type: Date,
+    required: true,
+  }, 
 });
 
 const User = mongoose.model("users", userSchema);
 const Forgot = mongoose.model("forgots", forgotModel);
+const Verify = mongoose.model("veryfies", verifyModel);
 
-module.exports = {User, Forgot};
+module.exports = { User, Forgot, Verify };
