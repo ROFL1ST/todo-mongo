@@ -15,18 +15,12 @@ const { TodoList, SubList } = require("../models/todolistModel");
 class todo {
   async getTodo(req, res) {
     try {
-      const { page, limit, key } = req.query;
-      const size = (parseInt(page) - 1) * parseInt(limit);
+      const { page = 1, limit = 8, key } = req.query;
+  
       const ObjectId = mongoose.Types.ObjectId;
       let headers = req.headers;
       let id = jwtDecode(headers.authorization).id;
-      // console.log(id);
-      if (page == undefined || limit == undefined) {
-        return res.status(402).json({
-          status: "Failed",
-          message: "Please enter the required params",
-        });
-      }
+      console.log(page,limit);
       const data = await TodoModel.aggregate([
         {
           $lookup: {
@@ -125,10 +119,10 @@ class todo {
           },
         },
         {
-          $skip: page == undefined ? 1 : size,
+          $skip: (parseInt(page) - 1) * parseInt(limit),
         },
         {
-          $limit: limit == undefined ? 8 : parseInt(limit),
+          $limit: parseInt(limit),
         },
       ]);
 
