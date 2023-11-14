@@ -20,7 +20,6 @@ class todo {
       const ObjectId = mongoose.Types.ObjectId;
       let headers = req.headers;
       let id = jwtDecode(headers.authorization).id;
-      console.log(page,limit);
       const data = await TodoModel.aggregate([
         {
           $lookup: {
@@ -119,6 +118,9 @@ class todo {
           },
         },
         {
+          $unwind: "$user",
+        },
+        {
           $skip: (parseInt(page) - 1) * parseInt(limit),
         },
         {
@@ -166,6 +168,7 @@ class todo {
             "user.token": 0,
           },
         },
+        
         {
           $match: {
             _id: new ObjectId(id),

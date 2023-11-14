@@ -511,9 +511,9 @@ class userControl {
 
   async searchUser(req, res) {
     try {
-      const { page, limit, key } = req.query;
+      const { page = 1, limit = 8, key } = req.query;
       const size = (parseInt(page) - 1) * parseInt(limit);
-      let user = await User.aggregate([
+      let pipeline = [
         {
           $project: {
             username: "$username",
@@ -522,23 +522,27 @@ class userControl {
             photo_profile: "$photo_profile",
           },
         },
-        key
-          ? {
-              $match: {
-                $or: [
-                  { name: { $regex: key, $options: "i" } },
-                  { username: { $regex: key, $options: "i" } },
-                ],
-              },
-            }
-          : {},
         {
           $skip: size,
         },
         {
           $limit: parseInt(limit),
         },
-      ]);
+      ];
+  
+      // Add $match stage if key is present
+      if (key) {
+        pipeline.splice(1, 0, {
+          $match: {
+            $or: [
+              { name: { $regex: key, $options: "i" } },
+              { username: { $regex: key, $options: "i" } },
+            ],
+          },
+        });
+      }
+  
+      let user = await User.aggregate(pipeline);
       return res.status(200).json({
         status: "Success",
         data: user,
