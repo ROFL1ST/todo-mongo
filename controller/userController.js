@@ -185,6 +185,8 @@ class userControl {
 
   async auth(req, res) {
     try {
+      const ObjectId = mongoose.Types.ObjectId;
+
       const { authorization } = req.headers;
       if (authorization === undefined)
         return res

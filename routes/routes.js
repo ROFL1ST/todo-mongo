@@ -16,13 +16,13 @@ router.get("/", (req, res) => {
 router.post("/register", userControl.register);
 router.post("/login", userControl.login);
 router.get("/verify/:id", userControl.verify);
+router.get("/auth", userControl.auth);
 router.post("/forgot-password", userControl.forgot_password);
 router.post("/resend-email", userControl.resendEmail);
 router.post("/verify-password/:email", userControl.verifyForgot);
 router.post("/reset-password", userControl.resetPassword);
 
 router.use(jwtMiddleWare);
-router.post("/auth", userControl.auth);
 
 router.put(
   "/user",
