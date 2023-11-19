@@ -183,6 +183,36 @@ class userControl {
     }
   }
 
+  async logout(req, res) {
+    const ObjectId = mongoose.Types.ObjectId;
+    try {
+      let headers = req.headers;
+      const data = await User.findById(
+        jwtDecode(headers.authorization).id
+      );
+      if (!data) {
+        return res
+          .status(404)
+          .json({ status: "Failed", message: "User's not found" });
+      }
+      await User.updateOne(
+        {
+          email: jwtDecode(headers.authorization).email,
+        },
+        { $set: { token: null } }
+      );
+      return res.status(200).json({
+        status: "Success",
+        message: "success to logout"
+      })
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+      });
+    }
+  }
+
   async auth(req, res) {
     try {
       const ObjectId = mongoose.Types.ObjectId;
