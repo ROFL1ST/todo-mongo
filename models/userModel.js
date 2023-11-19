@@ -59,6 +59,10 @@ const verifyModel = mongoose.Schema({
     unique: true,
     required: true,
   },
+  isUsed: {
+    type: Boolean,
+    default: false,
+  },
 });
 const forgotModel = mongoose.Schema({
   id_user: {

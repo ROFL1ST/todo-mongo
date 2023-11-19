@@ -92,11 +92,12 @@ class userControl {
       const ObjectId = mongoose.Types.ObjectId;
       const { id } = req.params;
       const user = await Verify.findOne({ code: id });
-      console.log(user);
       if (!user) {
         return res.status(404).json({ message: "Invalid verification code" });
       }
-
+      if (user.isUsed) {
+        return res.sendFile(__dirname + "/public/verification-used.html");
+      }
       await User.updateOne(
         {
           _id: new ObjectId(user.id_user),
@@ -105,9 +106,16 @@ class userControl {
           $set: { isVerified: true },
         }
       );
-      await Verify.deleteOne({
-        code: id,
-      });
+      await Verify.updateOne(
+        {
+          code: id,
+        },
+        {
+          $set: {
+            isUsed: true,
+          },
+        }
+      );
       return res.sendFile(__dirname + "/public/verification-success.html");
     } catch (error) {
       console.log(error);
@@ -529,7 +537,7 @@ class userControl {
           $limit: parseInt(limit),
         },
       ];
-  
+
       // Add $match stage if key is present
       if (key) {
         pipeline.splice(1, 0, {
@@ -541,7 +549,7 @@ class userControl {
           },
         });
       }
-  
+
       let user = await User.aggregate(pipeline);
       return res.status(200).json({
         status: "Success",
