@@ -162,7 +162,8 @@ class userControl {
       }
       const token = jwt.sign(
         { email: isUserExist.email, id: isUserExist._id },
-        process.env.JWT_ACCESS_TOKEN
+        process.env.JWT_ACCESS_TOKEN,
+        { expiresIn: "7d" }
       );
       await User.updateOne(
         {
