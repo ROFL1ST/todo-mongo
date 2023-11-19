@@ -182,6 +182,44 @@ class userControl {
       });
     }
   }
+
+  async auth(req, res) {
+    try {
+      const { authorization } = req.headers;
+      if (authorization === undefined)
+        return res
+          .status(401)
+          .json({ status: "Failed", message: "Token is required" });
+      const token = authorization.split(" ")[1];
+      jwt.verify(token, process.env.JWT_ACCESS_TOKEN, async (err, decode) => {
+        if (err) {
+          return res.status(401).json({
+            status: "Failed",
+            message: "Token is not valid",
+          });
+        }
+        const { id, email } = jwt.decode(token);
+        const newToken = jwt.sign({ email, id }, process.env.JWT_ACCESS_TOKEN, {
+          expiresIn: "7d",
+        });
+        await User.updateOne(
+          {
+            _id: new ObjectId(jwtDecode(token).id),
+          },
+          { $set: { token: newToken } }
+        );
+        return res.status(200).json({
+          status: "Success",
+          token: newToken,
+        });
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+      });
+    }
+  }
   async forgot_password(req, res) {
     try {
       const ObjectId = mongoose.Types.ObjectId;
