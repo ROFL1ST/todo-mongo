@@ -117,9 +117,7 @@ class todo {
             ],
           },
         },
-        {
-          $unwind: "$user",
-        },
+      
         {
           $skip: (parseInt(page) - 1) * parseInt(limit),
         },
