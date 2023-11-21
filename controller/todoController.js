@@ -4,7 +4,7 @@ const {
   ListUsersModel,
   InvitationalModel,
 } = require("../models/todoModels");
-const userModel = require("../models/userModel");
+const {User} = require("../models/userModel");
 const { v4: uuidv4 } = require("uuid");
 const { default: mongoose } = require("mongoose");
 const { default: jwtDecode } = require("jwt-decode");
@@ -352,7 +352,7 @@ class todo {
           .status(401)
           .json({ status: "Failed", message: "You are not the admin" });
 
-      let checked = await userModel.findOne({
+      let checked = await User.findOne({
         _id: body.invitedUser,
       });
 
