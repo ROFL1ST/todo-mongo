@@ -11,6 +11,62 @@ cloudinary.config({
   api_secret: process.env.API_SECRET_CLOUD,
 });
 class todoList {
+  async getAllList(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const id_user = jwtDecode(headers.authorization).id;
+      const { status } = req.query;
+      const todo = await TodoModel.aggregate([
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "todolists",
+          },
+        },
+        {
+          $lookup: {
+            from: "listusers",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "user",
+          },
+        },
+        {
+          $match: {
+            $and: [{ "user.id_user": new ObjectId(id_user) }],
+          },
+        },
+      ]);
+      const list = todo.map((item) => item._id);
+      const todoList = await TodoList.aggregate([
+        {
+          $match: {
+            $and: [
+              { id_todo: { $in: list.map((id) => new ObjectId(id)) } },
+              status
+                ? {
+                    status: { $regex: status, $options: "i" },
+                  }
+                : {},
+            ],
+          },
+        },
+      ]).exec();
+      return res.status(200).json({
+        status: "Success",
+        data: todoList,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
   async getList(req, res) {
     try {
       const ObjectId = mongoose.Types.ObjectId;

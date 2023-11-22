@@ -49,22 +49,23 @@ router.put("/todo/role/:id", Todo.updateRole);
 // notes : hanya owner yang bisa delete todo
 
 // todo list
-router.post("/todo/createList", TodoList.postList);
-router.get("/todo/list/:id", TodoList.getList);
-router.put("/todo/list/:id", TodoList.updateList);
-router.get("/todo/detail-list/:id", TodoList.getDetailList);
+router.post("/todos/createList", TodoList.postList);
+router.get("/todos/list", TodoList.getAllList);
+router.get("/todos/list/:id", TodoList.getList);
+router.put("/todos/list/:id", TodoList.updateList);
+router.get("/todos/detail-list/:id", TodoList.getDetailList);
 router.post(
-  "/todo/post-attaches/:id",
+  "/todod/post-attaches/:id",
   uploader.single("attach_url"),
   TodoList.postAttaches
 );
-router.get("/todo/attaches/:id", TodoList.getAttaches);
-router.delete("/todo/attaches/:id", TodoList.deleteAttaches);
+router.get("/todos/attaches/:id", TodoList.getAttaches);
+router.delete("/todos/attaches/:id", TodoList.deleteAttaches);
 
-router.post("/todo/sublist/:id", TodoList.postSubList);
-router.put("/todo/sublist/:id", TodoList.updateSubList);
-router.delete("/todo/remove-list/:id", TodoList.deleteList);
-router.delete("/todo/remove-sub/:id", TodoList.deleteSub);
+router.post("/todos/sublist/:id", TodoList.postSubList);
+router.put("/todos/sublist/:id", TodoList.updateSubList);
+router.delete("/todos/remove-list/:id", TodoList.deleteList);
+router.delete("/todos/remove-sub/:id", TodoList.deleteSub);
 
 // group chat
 router.get("/groupchat/:id", Chat.getRoom);

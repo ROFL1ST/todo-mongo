@@ -4,7 +4,7 @@ const {
   ListUsersModel,
   InvitationalModel,
 } = require("../models/todoModels");
-const {User} = require("../models/userModel");
+const { User } = require("../models/userModel");
 const { v4: uuidv4 } = require("uuid");
 const { default: mongoose } = require("mongoose");
 const { default: jwtDecode } = require("jwt-decode");
@@ -16,7 +16,7 @@ class todo {
   async getTodo(req, res) {
     try {
       const { page = 1, limit = 8, key } = req.query;
-  
+
       const ObjectId = mongoose.Types.ObjectId;
       let headers = req.headers;
       let id = jwtDecode(headers.authorization).id;
@@ -117,7 +117,7 @@ class todo {
             ],
           },
         },
-      
+
         {
           $skip: (parseInt(page) - 1) * parseInt(limit),
         },
@@ -142,7 +142,7 @@ class todo {
   async getDetail(req, res) {
     try {
       const ObjectId = mongoose.Types.ObjectId;
-      const id = req.params.id;
+      const { id } = req.params;
       const data = await TodoModel.aggregate([
         {
           $lookup: {
@@ -166,7 +166,7 @@ class todo {
             "user.token": 0,
           },
         },
-        
+
         {
           $match: {
             _id: new ObjectId(id),
