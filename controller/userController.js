@@ -161,7 +161,11 @@ class userControl {
         });
       }
       const token = jwt.sign(
-        { email: isUserExist.email, id: isUserExist._id },
+        {
+          email: isUserExist.email,
+          id: isUserExist._id,
+          name: isUserExist.name,
+        },
         process.env.JWT_ACCESS_TOKEN,
         { expiresIn: "7d" }
       );
@@ -187,9 +191,7 @@ class userControl {
     const ObjectId = mongoose.Types.ObjectId;
     try {
       let headers = req.headers;
-      const data = await User.findById(
-        jwtDecode(headers.authorization).id
-      );
+      const data = await User.findById(jwtDecode(headers.authorization).id);
       if (!data) {
         return res
           .status(404)
@@ -203,8 +205,8 @@ class userControl {
       );
       return res.status(200).json({
         status: "Success",
-        message: "success to logout"
-      })
+        message: "success to logout",
+      });
     } catch (error) {
       console.log(error);
       return res.status(500).json({
@@ -230,8 +232,8 @@ class userControl {
             message: "Token is not valid",
           });
         }
-        const { id, email } = jwt.decode(token);
-        const newToken = jwt.sign({ email, id }, process.env.JWT_ACCESS_TOKEN, {
+        const { id, email, name } = jwt.decode(token);
+        const newToken = jwt.sign({ email, id, name }, process.env.JWT_ACCESS_TOKEN, {
           expiresIn: "7d",
         });
         await User.updateOne(
