@@ -7,6 +7,7 @@ const cloudinary = require("cloudinary").v2;
 const { default: jwtDecode } = require("jwt-decode");
 const { sendEmail } = require("../mail");
 const crypto = require("crypto");
+const { TodoModel } = require("../models/todoModels");
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.API_KEY_CLOUD,
@@ -73,6 +74,7 @@ class userControl {
         id_user: new ObjectId(newUser._id),
         code: kode,
       });
+     
       res.status(200).json({
         status: "Success",
         message: "Verification has been sent to your email",
@@ -116,6 +118,11 @@ class userControl {
           },
         }
       );
+      await TodoModel.create({
+        id_user: new ObjectId(user.id_user),
+        name: "New Activity",
+        description : "Put Your Description Here"
+      });
       return res.sendFile(__dirname + "/public/verification-success.html");
     } catch (error) {
       console.log(error);
@@ -233,9 +240,13 @@ class userControl {
           });
         }
         const { id, email, name } = jwt.decode(token);
-        const newToken = jwt.sign({ email, id, name }, process.env.JWT_ACCESS_TOKEN, {
-          expiresIn: "7d",
-        });
+        const newToken = jwt.sign(
+          { email, id, name },
+          process.env.JWT_ACCESS_TOKEN,
+          {
+            expiresIn: "7d",
+          }
+        );
         await User.updateOne(
           {
             _id: new ObjectId(jwtDecode(token).id),
