@@ -7,7 +7,7 @@ const cloudinary = require("cloudinary").v2;
 const { default: jwtDecode } = require("jwt-decode");
 const { sendEmail } = require("../mail");
 const crypto = require("crypto");
-const { TodoModel } = require("../models/todoModels");
+const { TodoModel, ListUsersModel } = require("../models/todoModels");
 const { v4: uuidv4 } = require("uuid");
 
 cloudinary.config({
