@@ -74,7 +74,7 @@ class userControl {
         id_user: new ObjectId(newUser._id),
         code: kode,
       });
-     
+
       res.status(200).json({
         status: "Success",
         message: "Verification has been sent to your email",
@@ -118,10 +118,22 @@ class userControl {
           },
         }
       );
-      await TodoModel.create({
-        id_user: new ObjectId(user.id_user),
+      const code = uuidv4();
+      const token = jwt.sign(
+        { id: user.id_user, code: code },
+        process.env.JWT_INVITATION_TOKEN
+      );
+      let todo = await TodoModel.create({
+        id_user: user.id_user,
         name: "New Activity",
-        description : "Put Your Description Here"
+        description: "Put Your Description Here",
+        code: code,
+      });
+      await ListUsersModel.create({
+        id_todo: todo._id,
+        id_user: user.id_user,
+        token: token,
+        role: "owner",
       });
       return res.sendFile(__dirname + "/public/verification-success.html");
     } catch (error) {
