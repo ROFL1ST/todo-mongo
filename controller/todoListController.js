@@ -4,6 +4,7 @@ const { default: jwtDecode } = require("jwt-decode");
 const { default: mongoose } = require("mongoose");
 const cloudinary = require("cloudinary").v2;
 const { RoomChat, Message } = require("../models/chatModel");
+const { io } = require("../socket");
 const crypto = require("crypto");
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -224,14 +225,17 @@ class todoList {
           });
         }
         body.id_user = id_user;
-        let newTodoList = await TodoList.create(body).then(async (i) => {
-          let roomCode = crypto.randomBytes(10).toString("hex");
-          let dataRoom = {
-            room_code: roomCode,
-            id_todoList: i._id,
-          };
-          await RoomChat.create(dataRoom);
-        }); // Notice the change here
+        const newTodoList = await TodoList.create(body) // Notice the change here
+        let roomCode = crypto.randomBytes(10).toString("hex");
+        let dataRoom = {
+          room_code: roomCode,
+          id_todoList: newTodoList._id,
+        };
+        await RoomChat.create(dataRoom);
+        console.log(newTodoList);
+        io.to(newTodoList.id_todo).emit("newTodoList", {
+          todoList: newTodoList,
+        });
         return res.status(200).json({
           status: "Success",
           data: newTodoList,

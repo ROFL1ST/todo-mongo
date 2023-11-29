@@ -50,12 +50,9 @@ class userControl {
           message: "Your username is already exist",
         });
       }
-
       body.password = bcrypt.hashSync(body.password, 10);
       let newUser = await User.create(body);
-
       let kode = crypto.randomBytes(32).toString("hex");
-
       const link = `${process.env.MAIL_CLIENT_URL}/verify/${kode}`;
       const context = {
         url: link,
