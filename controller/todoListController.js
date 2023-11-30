@@ -11,6 +11,16 @@ cloudinary.config({
   api_key: process.env.API_KEY_CLOUD,
   api_secret: process.env.API_SECRET_CLOUD,
 });
+const watchAllList = TodoList.watch();
+watchAllList.on("change", async (change) => {
+  const ObjectId = mongoose.Types.ObjectId;
+
+  const updatedTodoList = await TodoList.aggregate([
+    { $match: { _id: new ObjectId(change.documentKey._id) } },
+  ]);
+  io.emit("todoListUpdated", { todoList: updatedTodoList });
+  console.log("TodoList updated:", updatedTodoList);
+});
 class todoList {
   async getAllList(req, res) {
     try {
@@ -225,17 +235,15 @@ class todoList {
           });
         }
         body.id_user = id_user;
-        const newTodoList = await TodoList.create(body) // Notice the change here
+        const newTodoList = await TodoList.create(body); // Notice the change here
         let roomCode = crypto.randomBytes(10).toString("hex");
         let dataRoom = {
           room_code: roomCode,
           id_todoList: newTodoList._id,
         };
         await RoomChat.create(dataRoom);
-        console.log(newTodoList);
-        io.to(newTodoList.id_todo).emit("newTodoList", {
-          todoList: newTodoList,
-        });
+        console.log(newTodoList.id_todo);
+      
         return res.status(200).json({
           status: "Success",
           data: newTodoList,
