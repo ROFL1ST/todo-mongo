@@ -3,9 +3,9 @@ const { isOnline, isOffline } = require("./controller/userController");
 const { sendMessage } = require("./controller/chatController");
 const { TodoList } = require("./models/todolistModel");
 const { default: mongoose } = require("mongoose");
-
+let io;
 const createSocketServer = (server) => {
-  const io = new Server(server);
+  io = new Server(server);
 
   io.on("connection", (socket) => {
     console.log(`${socket.id} join`);
@@ -23,7 +23,7 @@ const createSocketServer = (server) => {
     // socket.on("received_message", (data) => {
     //   console.log("diterima", data);
     // });
-    
+
     socket.on("offline", (data) => {
       isOffline(data);
     });
@@ -32,4 +32,24 @@ const createSocketServer = (server) => {
   return io;
 };
 
-module.exports = { createSocketServer, io: createSocketServer() };
+const emitTodoListUpdate = async (change) => {
+  try {
+    const ObjectId = mongoose.Types.ObjectId;
+    const updatedTodoList = await TodoList.aggregate([
+      { $match: { _id: new ObjectId(change.documentKey._id) } },
+    ]);
+    if (io) {
+      io.emit("todoListUpdated", { todoList: updatedTodoList });
+    } else {
+      console.error(
+        "Socket.io instance not initialized. Make sure to call createSocketServer first."
+      );
+    }
+
+    console.log("TodoList updated:", updatedTodoList);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+module.exports = { createSocketServer, emitTodoListUpdate };

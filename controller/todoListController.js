@@ -5,27 +5,13 @@ const { default: mongoose } = require("mongoose");
 const cloudinary = require("cloudinary").v2;
 const { RoomChat, Message } = require("../models/chatModel");
 const crypto = require("crypto");
-const { io } = require("../socket");
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.API_KEY_CLOUD,
   api_secret: process.env.API_SECRET_CLOUD,
 });
-const watchAllList = TodoList.watch();
-    watchAllList.on("change", async (change) => {
-      try {
-        const ObjectId = mongoose.Types.ObjectId;
 
-        const updatedTodoList = await TodoList.aggregate([
-          { $match: { _id: new ObjectId(change.documentKey._id) } },
-        ]);
-        io.emit("todoListUpdated", { todoList: updatedTodoList });
-        console.log("TodoList updated:", updatedTodoList);
-      } catch (error) {
-        console.log(error);
-      }
-    });
 class todoList {
   async getAllList(req, res) {
     try {
