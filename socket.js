@@ -39,7 +39,10 @@ const emitTodoListUpdate = async (change) => {
       { $match: { _id: new ObjectId(change.documentKey._id) } },
     ]);
     if (io) {
-      io.emit("todoListUpdated", { todoList: updatedTodoList });
+      console.log(io.emit("todoListUpdated", { todoList: updatedTodoList }));
+      io.on("connection", (socket) => {
+        socket.emit("todoListUpdated", updatedTodoList)
+      })
     } else {
       console.error(
         "Socket.io instance not initialized. Make sure to call createSocketServer first."
