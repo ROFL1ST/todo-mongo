@@ -4,23 +4,14 @@ const { default: jwtDecode } = require("jwt-decode");
 const { default: mongoose } = require("mongoose");
 const cloudinary = require("cloudinary").v2;
 const { RoomChat, Message } = require("../models/chatModel");
-const { io } = require("../socket");
 const crypto = require("crypto");
+
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.API_KEY_CLOUD,
   api_secret: process.env.API_SECRET_CLOUD,
 });
-const watchAllList = TodoList.watch();
-watchAllList.on("change", async (change) => {
-  const ObjectId = mongoose.Types.ObjectId;
 
-  const updatedTodoList = await TodoList.aggregate([
-    { $match: { _id: new ObjectId(change.documentKey._id) } },
-  ]);
-  io.emit("todoListUpdated", { todoList: updatedTodoList });
-  console.log("TodoList updated:", updatedTodoList);
-});
 class todoList {
   async getAllList(req, res) {
     try {
@@ -243,7 +234,7 @@ class todoList {
         };
         await RoomChat.create(dataRoom);
         console.log(newTodoList.id_todo);
-      
+
         return res.status(200).json({
           status: "Success",
           data: newTodoList,
