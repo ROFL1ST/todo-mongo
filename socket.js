@@ -23,20 +23,7 @@ const createSocketServer = (server) => {
     // socket.on("received_message", (data) => {
     //   console.log("diterima", data);
     // });
-    const watchAllList = TodoList.watch();
-    watchAllList.on("change", async (change) => {
-      try {
-        const ObjectId = mongoose.Types.ObjectId;
-
-        const updatedTodoList = await TodoList.aggregate([
-          { $match: { _id: new ObjectId(change.documentKey._id) } },
-        ]);
-        socket.emit("todoListUpdated", { todoList: updatedTodoList });
-        console.log("TodoList updated:", updatedTodoList);
-      } catch (error) {
-        console.log(error);
-      }
-    });
+    
     socket.on("offline", (data) => {
       isOffline(data);
     });
@@ -45,4 +32,4 @@ const createSocketServer = (server) => {
   return io;
 };
 
-module.exports = { createSocketServer };
+module.exports = { createSocketServer, io: createSocketServer() };
