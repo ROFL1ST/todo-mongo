@@ -6,6 +6,7 @@ const userControl = require("../controller/userController");
 const { jwtMiddleWare } = require("../middleware/jwt_middleware");
 const { uploader } = require("../middleware/file_upload");
 const Chat = require("../controller/chatController");
+const friendController = require("../controller/friendController");
 router.get("/", (req, res) => {
   res.json({
     status: "Ok",
@@ -34,6 +35,14 @@ router.get("/user", userControl.searchUser);
 router.get("/profile", userControl.profile);
 router.get("/user/:id", userControl.detailProfile);
 
+// friends
+router.get("/friends", friendController.listFriends)
+router.post("/friends/add/:id", friendController.addFriend)
+router.get("/friends/request", friendController.getFriendsRequest)
+router.put("/friends/request/:id", friendController.respondRequest)
+router.delete("/friends/:id", friendController.removeFriends)
+
+
 // todo
 router.get("/todo", Todo.getTodo);
 router.get("/todo/invitation", Todo.getInvitation);
@@ -42,6 +51,7 @@ router.delete("/todo/:id", Todo.deleteTodo);
 router.post("/todo", Todo.postTodo);
 router.post("/todo/add/:id", Todo.inviteUser);
 router.put("/todo/invitation/:id", Todo.invitationRespond);
+router.delete("/todo/invitation/:id", Todo.DeleteInvitation);
 router.delete("/todo/kick/:id", Todo.kickUser);
 router.put("/todo/:id", Todo.updateTodo);
 router.put("/todo/role/:id", Todo.updateRole);

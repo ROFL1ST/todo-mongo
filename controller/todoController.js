@@ -473,6 +473,35 @@ class todo {
       });
     }
   }
+  async DeleteInvitation(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const id = req.params.id;
+      const id_user = jwtDecode(headers.authorization).id;
+      const invitation = InvitationalModel.findOne({ $and: [
+        {_id: new ObjectId(id)},
+        {invitedUser: new ObjectId(id_user)}
+      ] });
+      if (!invitation) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Invitation is not found",
+        });
+      }
+      await InvitationalModel.findOneAndDelete({ _id: new ObjectId(id) });
+      return res.status(200).json({
+        status: "Success",
+        message: "Invitation has been deleted",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
 
   async invitationRespond(req, res) {
     try {
