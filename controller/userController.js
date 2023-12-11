@@ -18,7 +18,7 @@ cloudinary.config({
 });
 
 async function getLocationInfo(ip) {
-  const apiKey = 'YOUR_GEOLOCATION_API_KEY'; // Replace with your actual API key
+  const apiKey = 'aff52baa1fc17a1e330dd495aa2c5ad6'; // Replace with your actual API key
   const apiUrl = `http://api.ipstack.com/${ip}?access_key=${apiKey}`;
 
   try {
@@ -216,6 +216,7 @@ class userControl {
         id_user: isUserExist._id,
         user_agent: device,
         ip: ip,
+        location: location,
         loginAt: Date.now(),
       });
       return res.status(200).json({
