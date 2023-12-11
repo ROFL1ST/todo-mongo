@@ -1,4 +1,4 @@
-const { User, Forgot, Verify } = require("../models/userModel");
+const { User, Forgot, Verify, History } = require("../models/userModel");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
@@ -193,6 +193,12 @@ class userControl {
         },
         { $set: { token: token } }
       );
+      await History.create({
+        id_user: isUserExist._id,
+        user_agent: req.headers["user-agent"],
+        ip: req.socket.remoteAddress,
+        loginAt: Date.now(),
+      });
       return res.status(200).json({
         status: "Success",
         token: token,
@@ -221,6 +227,12 @@ class userControl {
         },
         { $set: { token: null } }
       );
+      await History.create({
+        id_user: jwtDecode(headers.authorization).id,
+        user_agent: req.headers["user-agent"],
+        ip: req.socket.remoteAddress,
+        logoutAt: Date.now(),
+      });
       return res.status(200).json({
         status: "Success",
         message: "success to logout",

@@ -77,11 +77,36 @@ const forgotModel = mongoose.Schema({
   dateExpired: {
     type: Date,
     required: true,
-  }, 
+  },
+});
+
+const historyModel = mongoose.Schema({
+  id_user: {
+    type: ObjectId,
+    ref: "users",
+    required: true,
+  },
+  user_agent: {
+    type: String,
+    required: true,
+  },
+  ip: {
+    type: String,
+    required: true,
+  },
+  loginAt: {
+    type: Date,
+    default: null,
+  },
+  logoutAt: {
+    type: Date,
+    default: null,
+  },
 });
 
 const User = mongoose.model("users", userSchema);
 const Forgot = mongoose.model("forgots", forgotModel);
 const Verify = mongoose.model("veryfies", verifyModel);
+const History = mongoose.model("histories", historyModel)
 
-module.exports = { User, Forgot, Verify };
+module.exports = { User, Forgot, Verify, History };
