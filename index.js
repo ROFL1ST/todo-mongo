@@ -7,10 +7,12 @@ const router = require("./routes/routes");
 const app = express();
 const { createServer } = require("http");
 const { TodoList } = require("./models/todolistModel");
+var useragent = require('express-useragent');
 const server = createServer(app);
 const port = process.env.PORT || 9000;
 const uri = process.env.DB_HOST;
 const dbName = process.env.DB_DATABASE;
+app.use(useragent.express());
 app.use(cors());
 app.use(express.json());
 app.use("/api", router);
@@ -23,8 +25,8 @@ mongoose
   .catch((err) => {
     console.log(err);
   });
-  const watchAllList = TodoList.watch();
-  watchAllList.on("change", emitTodoListUpdate);
+const watchAllList = TodoList.watch();
+watchAllList.on("change", emitTodoListUpdate);
 // app.listen(port, () => {
 //   console.log(`Server Berjalan di port ${port} Berhasil`);
 // });

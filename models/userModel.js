@@ -94,6 +94,10 @@ const historyModel = mongoose.Schema({
     type: String,
     required: true,
   },
+  location: {
+    type: String,
+    default: null,
+  },
   loginAt: {
     type: Date,
     default: null,
@@ -107,6 +111,6 @@ const historyModel = mongoose.Schema({
 const User = mongoose.model("users", userSchema);
 const Forgot = mongoose.model("forgots", forgotModel);
 const Verify = mongoose.model("veryfies", verifyModel);
-const History = mongoose.model("histories", historyModel)
+const History = mongoose.model("histories", historyModel);
 
 module.exports = { User, Forgot, Verify, History };

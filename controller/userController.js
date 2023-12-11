@@ -9,12 +9,26 @@ const { sendEmail } = require("../mail");
 const crypto = require("crypto");
 const { TodoModel, ListUsersModel } = require("../models/todoModels");
 const { v4: uuidv4 } = require("uuid");
+const { default: axios } = require("axios");
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.API_KEY_CLOUD,
   api_secret: process.env.API_SECRET_CLOUD,
 });
+
+async function getLocationInfo(ip) {
+  const apiKey = 'YOUR_GEOLOCATION_API_KEY'; // Replace with your actual API key
+  const apiUrl = `http://api.ipstack.com/${ip}?access_key=${apiKey}`;
+
+  try {
+    const response = await axios.get(apiUrl);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching location info:', error.message);
+    return null;
+  }
+}
 class userControl {
   async register(req, res) {
     try {
@@ -151,9 +165,14 @@ class userControl {
   async isOffline(id) {
     await User.updateOne({ _id: id }, { $set: { status: "offline" } });
   }
+
   async login(req, res) {
     const ObjectId = mongoose.Types.ObjectId;
     try {
+      const { user_agent } = req.headers;
+      const ip = req.socket.remoteAddress;
+      const device = req.useragent ? req.useragent.source : "Unknown Device";
+      const location = await getLocationInfo(ip);
       let body = req.body;
       let isUserExist = await User.findOne({
         username: body.username,
@@ -195,8 +214,8 @@ class userControl {
       );
       await History.create({
         id_user: isUserExist._id,
-        user_agent: req.headers["user-agent"],
-        ip: req.socket.remoteAddress,
+        user_agent: device,
+        ip: ip,
         loginAt: Date.now(),
       });
       return res.status(200).json({
