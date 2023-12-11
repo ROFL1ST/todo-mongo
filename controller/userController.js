@@ -169,9 +169,8 @@ class userControl {
   async login(req, res) {
     const ObjectId = mongoose.Types.ObjectId;
     try {
-      const { user_agent } = req.headers;
       const ip = req.socket.remoteAddress;
-      const device = req.useragent ? req.useragent.source : "Unknown Device";
+      const device = req.useragent ? req.useragent.os : "Unknown Device";
       const location = await getLocationInfo(ip);
       let body = req.body;
       let isUserExist = await User.findOne({
@@ -216,7 +215,7 @@ class userControl {
         id_user: isUserExist._id,
         user_agent: device,
         ip: ip,
-        location: location,
+        location:  location ? `${location.city}, ${location.region_name}, ${location.country_name}` : 'Unknown',
         loginAt: Date.now(),
       });
       return res.status(200).json({
@@ -234,6 +233,9 @@ class userControl {
   async logout(req, res) {
     const ObjectId = mongoose.Types.ObjectId;
     try {
+      const ip = req.socket.remoteAddress;
+      const device = req.useragent ? req.useragent.os : "Unknown Device";
+      const location = await getLocationInfo(ip);
       let headers = req.headers;
       const data = await User.findById(jwtDecode(headers.authorization).id);
       if (!data) {
@@ -248,10 +250,11 @@ class userControl {
         { $set: { token: null } }
       );
       await History.create({
-        id_user: jwtDecode(headers.authorization).id,
-        user_agent: req.headers["user-agent"],
-        ip: req.socket.remoteAddress,
-        logoutAt: Date.now(),
+        id_user: isUserExist._id,
+        user_agent: device,
+        ip: ip,
+        location:  location ? `${location.city}, ${location.region_name}, ${location.country_name}` : 'Unknown',
+        loginAt: Date.now(),
       });
       return res.status(200).json({
         status: "Success",
