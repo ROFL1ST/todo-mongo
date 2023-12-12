@@ -65,7 +65,7 @@ router.get("/todos/list/:id", TodoList.getList);
 router.put("/todos/list/:id", TodoList.updateList);
 router.get("/todos/detail-list/:id", TodoList.getDetailList);
 router.post(
-  "/todod/post-attaches/:id",
+  "/todos/post-attaches/:id",
   uploader.single("attach_url"),
   TodoList.postAttaches
 );
