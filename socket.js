@@ -33,6 +33,7 @@ const createSocketServer = (server) => {
 };
 
 const emitTodoListUpdate = async (change) => {
+  const ObjectId = mongoose.Types.ObjectId;
   switch (change.operationType) {
     case "insert":
       const updatedTodoList = await TodoList.aggregate([
@@ -41,9 +42,7 @@ const emitTodoListUpdate = async (change) => {
       io.of("/api/socket").emit("todoListUpdated", updatedTodoList);
       break;
     case "delete":
-      io.on("connection", (socket) => {
-        socket.emit("todoListDeleted", change.documentKey._id);
-      });
+      io.of("/api/socket").emit("todoListDeleted", change.documentKey._id);
       break;
   }
 };
