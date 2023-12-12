@@ -281,7 +281,7 @@ class todoList {
           },
         },
       ]);
-      if (!todo) {
+      if (!todo || todo.length == 0) {
         return res.status(404).json({
           status: "Failed",
           message: "Todo or user is not in this server",
@@ -349,7 +349,7 @@ class todoList {
           },
         },
       ]);
-      if (!todo) {
+      if (!todo || todo.length == 0) {
         return res.status(404).json({
           status: "Failed",
           message: "Todo or user is not in this server",
