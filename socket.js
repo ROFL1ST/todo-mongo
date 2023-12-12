@@ -7,7 +7,7 @@ let io;
 const createSocketServer = (server) => {
   io = new Server(server);
 
-  io.on("connection", (socket) => {
+  io.of("/api/socket").on("connection", (socket) => {
     console.log(`${socket.id} join`);
     socket.on("online", (data) => {
       isOnline(data);
@@ -35,11 +35,11 @@ const createSocketServer = (server) => {
 const emitTodoListUpdate = async (change) => {
   switch (change.operationType) {
     case "insert":
-      io.on("connection", (socket) => {
-        socket.emit("todoListUpdated", updatedTodoList);
-      });
+      const updatedTodoList = await TodoList.aggregate([
+        { $match: { _id: new ObjectId(change.documentKey._id) } },
+      ]);
+      io.of("/api/socket").emit("todoListUpdated", updatedTodoList);
       break;
-
     case "delete":
       io.on("connection", (socket) => {
         socket.emit("todoListDeleted", change.documentKey._id);
