@@ -10,7 +10,7 @@ const { default: mongoose } = require("mongoose");
 const { default: jwtDecode } = require("jwt-decode");
 const bcrypt = require("bcrypt");
 const { RoomChat, Message } = require("../models/chatModel");
-const { TodoList, SubList } = require("../models/todolistModel");
+const { TodoList, SubList, Asign } = require("../models/todolistModel");
 
 class todo {
   async getTodo(req, res) {
@@ -289,6 +289,12 @@ class todo {
           await Message.deleteMany({
             room_code: { $in: rommsId },
           });
+        }
+        let check_asigned = await Asign.findOne({
+          id_todoList: new ObjectId(id),
+        });
+        if (check_asigned) {
+          await Asign.deleteMany({ id_todoList: new ObjectId(id) });
         }
         await TodoList.deleteMany({ _id: { $in: todoListIds } });
       }
@@ -781,6 +787,7 @@ class todo {
       const headers = req.headers;
       const ObjectId = mongoose.Types.ObjectId;
       const id_user = jwtDecode(headers.authorization).id;
+      const { kick } = req.body;
       const id = req.params.id;
       const todo = await TodoModel.aggregate([
         {
@@ -801,13 +808,15 @@ class todo {
         },
         {
           $match: {
-            "user.id_user": new ObjectId(id),
+            _id: new ObjectId(id),
             "user.id_user": { $exists: true }, // Check if "user" array exists
-            "user.id_user": new ObjectId(id_user),
+            $and: [
+              { "user.id_user": new ObjectId(id_user) },
+              { "user.id_user": new ObjectId(kick) },
+            ],
           },
         },
       ]);
-      console.log(todo);
       if (todo.length == 0) {
         return res.status(404).json({
           status: "Failed",
@@ -817,10 +826,12 @@ class todo {
       let listUser = todo[0].user.filter((i) => i.id_user == id_user);
       // return console.log();
       if (listUser[0].role != "owner") {
-        return res.status(401).json({
-          status: "Failed",
-          message: "You are not the owner of this todo",
-        });
+        if (kick !== id_user) {
+          return res.status(403).json({
+            status: "Failed",
+            message: "You are not the owner of this todo",
+          });
+        }
       }
       let data = await ListUsersModel.findOneAndDelete(id);
       return res.status(200).json({

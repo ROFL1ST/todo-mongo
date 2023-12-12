@@ -75,6 +75,8 @@ router.post(
 );
 router.get("/todos/attaches/:id", TodoList.getAttaches);
 router.delete("/todos/attaches/:id", TodoList.deleteAttaches);
+router.post("/todos/list/assign/:id", TodoList.insertAsign)
+router.delete("/todos/list/assign/:id", TodoList.kickAssign)
 
 router.post("/todos/sublist/:id", TodoList.postSubList);
 router.put("/todos/sublist/:id", TodoList.updateSubList);

@@ -79,11 +79,23 @@ const subListSchema = mongoose.Schema({
   },
 });
 
+const asignListSchema = mongoose.Schema({
+  id_user: {
+    type: ObjectId,
+    required: true,
+  },
+  id_todoList: {
+    type: ObjectId,
+    required: true,
+    ref: "todolists",
+  },
+});
+
 // comment
 
 const TodoList = mongoose.model("todolists", todoListSchema);
-
 const SubList = mongoose.model("sublists", subListSchema);
 const Attaches = mongoose.model("attaches", attachListSchema);
+const Asign = mongoose.model("asign-lists", asignListSchema)
 
-module.exports = { TodoList, SubList, Attaches };
+module.exports = { TodoList, SubList, Attaches, Asign };

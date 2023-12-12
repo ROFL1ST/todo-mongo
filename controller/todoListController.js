@@ -1,4 +1,9 @@
-const { TodoList, SubList, Attaches } = require("../models/todolistModel");
+const {
+  TodoList,
+  SubList,
+  Attaches,
+  Asign,
+} = require("../models/todolistModel");
 const { TodoModel } = require("../models/todoModels");
 const { default: jwtDecode } = require("jwt-decode");
 const { default: mongoose } = require("mongoose");
@@ -18,7 +23,7 @@ class todoList {
       const headers = req.headers;
       const ObjectId = mongoose.Types.ObjectId;
       const id_user = jwtDecode(headers.authorization).id;
-      const { status } = req.query;
+      const { status, priority } = req.query;
       const todo = await TodoModel.aggregate([
         {
           $lookup: {
@@ -48,11 +53,20 @@ class todoList {
           $match: {
             $and: [
               { id_todo: { $in: list.map((id) => new ObjectId(id)) } },
-              status
-                ? {
-                    status: { $regex: status, $options: "i" },
-                  }
-                : {},
+              {
+                $and: [
+                  status
+                    ? {
+                        status: { $regex: status, $options: "i" },
+                      }
+                    : {},
+                  priority
+                    ? {
+                        priority: { $regex: priority, $options: "i" },
+                      }
+                    : {},
+                ],
+              },
             ],
           },
         },
@@ -96,6 +110,14 @@ class todoList {
               localField: "_id",
               foreignField: "id_todoList",
               as: "chat",
+            },
+          },
+          {
+            $lookup: {
+              from: "asign-lists",
+              localField: "_id",
+              foreignField: "id_todoList",
+              as: "asigned",
             },
           },
         ]);
@@ -155,6 +177,14 @@ class todoList {
             localField: "_id",
             foreignField: "id_todoList",
             as: "sublists",
+          },
+        },
+        {
+          $lookup: {
+            from: "asign-lists",
+            localField: "_id",
+            foreignField: "id_todoList",
+            as: "asigned",
           },
         },
       ]);
@@ -374,13 +404,19 @@ class todoList {
           room_code: RoomChat.room_code,
         });
       }
-      let check_sub = await SubList.findOne({ id_todoList: id });
+      let check_sub = await SubList.findOne({ id_todoList: new ObjectId(id) });
       if (check_sub) {
         await SubList.deleteMany({
-          id_todoList: id,
+          id_todoList: new ObjectId(id),
         });
       }
-      const deleteTask = await TodoList.deleteOne({ _id: id });
+      let check_asigned = await Asign.findOne({
+        id_todoList: new ObjectId(id),
+      });
+      if (check_asigned) {
+        await Asign.deleteMany({ id_todoList: new ObjectId(id) });
+      }
+      const deleteTask = await TodoList.deleteOne({ _id: new ObjectId(id) });
       return res.status(200).json({
         status: "Success",
       });
@@ -434,10 +470,15 @@ class todoList {
       } else {
         let listUser = todo[0].user.filter((i) => i.id_user == id_user);
         if (listUser[0].role == "member") {
-          return res.status(401).json({
-            status: "Failed",
-            message: "You are not the admin of this todo",
+          let check_asigned = await Asign.findOne({
+            id_user: new ObjectId(id_user),
           });
+          if (!check_asigned) {
+            return res.status(401).json({
+              status: "Failed",
+              message: "You are not the admin of this todo",
+            });
+          }
         }
         body.id_user = id_user;
         body.id_todoList = id;
@@ -560,10 +601,15 @@ class todoList {
       }
       let listUser = todo[0].user.filter((i) => i.id_user == id_user);
       if (listUser[0].role == "member") {
-        return res.status(401).json({
-          status: "Failed",
-          message: "You are not the admin of this todo",
+        let check_asigned = await Asign.findOne({
+          id_user: new ObjectId(id_user),
         });
+        if (!check_asigned) {
+          return res.status(401).json({
+            status: "Failed",
+            message: "You are not the admin of this todo",
+          });
+        }
       }
       const data = await Attaches.findById(id);
       if (!data) {
@@ -629,10 +675,15 @@ class todoList {
       } else {
         let listUser = todo[0].user.filter((i) => i.id_user == id_user);
         if (listUser[0].role == "member") {
-          return res.status(401).json({
-            status: "Failed",
-            message: "You are not the admin of this todo",
+          let check_asigned = await Asign.findOne({
+            id_user: new ObjectId(id_user),
           });
+          if (!check_asigned) {
+            return res.status(401).json({
+              status: "Failed",
+              message: "You are not the admin of this todo",
+            });
+          }
         }
         body.id_user = id_user;
         body.id_todoList = id;
@@ -705,10 +756,15 @@ class todoList {
       }
       let listUser = todo[0].user.filter((i) => i.id_user == id_user);
       if (listUser[0].role == "member") {
-        return res.status(401).json({
-          status: "Failed",
-          message: "You are not the admin of this todo",
+        let check_asigned = await Asign.findOne({
+          id_user: new ObjectId(id_user),
         });
+        if (!check_asigned) {
+          return res.status(401).json({
+            status: "Failed",
+            message: "You are not the admin of this todo",
+          });
+        }
       }
 
       await SubList.updateOne(
@@ -781,10 +837,17 @@ class todoList {
       } else {
         let listUser = todo[0].user.filter((i) => i.id_user == id_user);
         if (listUser[0].role == "member") {
-          return res.status(401).json({
-            status: "Failed",
-            message: "You are not the admin of this todo",
+          let check_asigned = await Asign.findOne({
+            id_user: new ObjectId(id_user),
           });
+          if (!check_asigned) {
+            return res.status(401).json({
+              status: "Failed",
+              message: "You are not the admin of this todo",
+            });
+          } else {
+            next();
+          }
         }
         await SubList.deleteOne({
           _id: new ObjectId(id),
@@ -793,6 +856,182 @@ class todoList {
           status: "Success",
         });
       }
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+
+  async insertAsign(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const id_user = jwtDecode(headers.authorization).id;
+      const { id } = req.params;
+      const asignData = req.body;
+      const data = await TodoModel.aggregate([
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "todolists",
+          },
+        },
+        {
+          $lookup: {
+            from: "listusers",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "user",
+          },
+        },
+        {
+          $match: {
+            "todolists._id": new ObjectId(id),
+            "user.id_user": new ObjectId(id_user),
+          },
+        },
+      ]);
+      if (data.length == 0) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Todo's not found",
+        });
+      }
+      let check = data[0].user.filter((e) => e.id_user == id_user);
+      // Check member can assign to himself only
+      // if (check[0].role == "member") {
+      //   return res.status(403).json({
+      //     status: "Failed",
+      //     message: `Only owner or admin can do that`,
+      //   });
+      // }
+      if (
+        check.length === 0 ||
+        (check[0].role !== "admin" && check[0].role !== "owner")
+      ) {
+        // If the user is trying to assign someone else
+        if (asignData.id_user !== id_user) {
+          return res.status(403).json({
+            status: "Failed",
+            message: "You can only assign roles to yourself",
+          });
+        }
+      }
+
+      const userExist = data[0].user.filter((e) => e.id_user == id_user);
+      if (userExist.length != 0) {
+        // return console.log("HAi");
+        let check_asigned = await Asign.findOne({
+          id_user: new ObjectId(asignData.id_user),
+        });
+        if (check_asigned) {
+          return res.status(403).json({
+            status: "Failed",
+            message: "User's already assigned",
+          });
+        }
+        asignData.id_todoList = id;
+        await Asign.create(asignData);
+        return res.status(200).json({
+          status: "Success",
+          message: "Assigned successfully",
+        });
+      } else {
+        return res.status(404).json({
+          status: "Failed",
+          message: "User's not found in this todo",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+
+  async kickAssign(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const id_user = jwtDecode(headers.authorization).id;
+      const { id } = req.params;
+      const { kick } = req.body;
+      const data = await TodoModel.aggregate([
+        {
+          $lookup: {
+            from: "todolists",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "todolists",
+          },
+        },
+        {
+          $lookup: {
+            from: "listusers",
+            localField: "_id",
+            foreignField: "id_todo",
+            as: "user",
+          },
+        },
+        {
+          $match: {
+            "todolists._id": new ObjectId(id),
+            "user.id_user": { $exists: true }, // Check if "user" array exists
+          },
+        },
+      ]);
+      if (data.length == 0) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Todo is not found",
+        });
+      }
+
+      let check_asigned = await TodoList.aggregate([
+        {
+          $lookup: {
+            from: "asign-lists",
+            localField: "_id",
+            foreignField: "id_todoList",
+            as: "asigned",
+          },
+        },
+        {
+          $match: {
+            $and: [
+              { _id: new ObjectId(id) },
+              { "asigned.id_user": new ObjectId(kick) },
+            ],
+          },
+        },
+      ]);
+      // return console.log(check_asigned);
+      if (check_asigned.length != 0) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "User's not here",
+        });
+      }
+      let listUser = data[0].user.filter((i) => i.id_user == id_user);
+      if (listUser[0].role !== "admin" && listUser[0].role !== "owner") {
+        if (kick !== id_user) {
+          return res.status(403).json({
+            status: "Failed",
+            message: "You are not the owner of this todo",
+          });
+        }
+      }
+      await Asign.findOneAndDelete({ id_user: new ObjectId(kick) });
+      return res.status(200).json({
+        status: "Success",
+      });
     } catch (error) {
       console.log(error);
       return res.status(500).json({
