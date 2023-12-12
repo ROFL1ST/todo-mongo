@@ -33,25 +33,18 @@ const createSocketServer = (server) => {
 };
 
 const emitTodoListUpdate = async (change) => {
-  try {
-    const ObjectId = mongoose.Types.ObjectId;
-    const updatedTodoList = await TodoList.aggregate([
-      { $match: { _id: new ObjectId(change.documentKey._id) } },
-    ]);
-    if (io) {
-      console.log(io.emit("todoListUpdated", { todoList: updatedTodoList }));
+  switch (change.operationType) {
+    case "insert":
       io.on("connection", (socket) => {
-        socket.emit("todoListUpdated", updatedTodoList)
-      })
-    } else {
-      console.error(
-        "Socket.io instance not initialized. Make sure to call createSocketServer first."
-      );
-    }
+        socket.emit("todoListUpdated", updatedTodoList);
+      });
+      break;
 
-    console.log("TodoList updated:", updatedTodoList);
-  } catch (error) {
-    console.log(error);
+    case "delete":
+      io.on("connection", (socket) => {
+        socket.emit("todoListDeleted", change.documentKey._id);
+      });
+      break;
   }
 };
 
