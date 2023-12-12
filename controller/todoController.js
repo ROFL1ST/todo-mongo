@@ -4,7 +4,7 @@ const {
   ListUsersModel,
   InvitationalModel,
 } = require("../models/todoModels");
-const { User } = require("../models/userModel");
+const { User, Notifications } = require("../models/userModel");
 const { v4: uuidv4 } = require("uuid");
 const { default: mongoose } = require("mongoose");
 const { default: jwtDecode } = require("jwt-decode");
@@ -399,7 +399,6 @@ class todo {
           },
         },
       ]);
-      console.log(check_list);
       if (check_list.length != 0) {
         return res.status(400).json({
           status: "Failed",
@@ -415,7 +414,15 @@ class todo {
       body.id_todo = id;
       body.token = token;
       body.invited_by = userId;
-      let invite = await InvitationalModel.create(body);
+      const data = await InvitationalModel.create(body);
+      const user = await User.findOne({ _id: new ObjectId(userId) });
+      await Notifications.create({
+        type: "invitation",
+        title: `You have been invited to the task "${todo[0].name}" by ${user.username}`,
+        from: userId,
+        id_user: body.invitedUser,
+        id_content: data._id,
+      });
       return res.status(200).json({
         status: "Success",
         message: "Invitation has been sent",
@@ -479,10 +486,12 @@ class todo {
       const ObjectId = mongoose.Types.ObjectId;
       const id = req.params.id;
       const id_user = jwtDecode(headers.authorization).id;
-      const invitation = InvitationalModel.findOne({ $and: [
-        {_id: new ObjectId(id)},
-        {invitedUser: new ObjectId(id_user)}
-      ] });
+      const invitation = InvitationalModel.findOne({
+        $and: [
+          { _id: new ObjectId(id) },
+          { invitedUser: new ObjectId(id_user) },
+        ],
+      });
       if (!invitation) {
         return res.status(404).json({
           status: "Failed",
@@ -490,6 +499,7 @@ class todo {
         });
       }
       await InvitationalModel.findOneAndDelete({ _id: new ObjectId(id) });
+      await Notifications.findOneAndDelete({ id_content: new ObjectId(id) });
       return res.status(200).json({
         status: "Success",
         message: "Invitation has been deleted",
@@ -574,6 +584,18 @@ class todo {
         body.id_user = jwtDecode(invite_code).id;
         body.token = invite_code;
         await ListUsersModel.create(body);
+        await Notifications.findOneAndDelete({
+          invitedUser: new ObjectId(jwtDecode(invite_code).id),
+        });
+        const user = await User.findOne({
+          _id: new ObjectId(jwtDecode(invite_code).id),
+        });
+        await Notifications.create({
+          from: jwtDecode(invite_code).id,
+          type: "response",
+          title: `${user.username} has accepted your invitation`,
+          id_user: invitational[0].invited_by,
+        });
         await InvitationalModel.findOneAndDelete({ _id: new ObjectId(id) });
         return res.status(200).json({
           status: "Success",

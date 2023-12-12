@@ -1,4 +1,10 @@
-const { User, Forgot, Verify, History } = require("../models/userModel");
+const {
+  User,
+  Forgot,
+  Verify,
+  History,
+  Notifications,
+} = require("../models/userModel");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
@@ -18,14 +24,14 @@ cloudinary.config({
 });
 
 async function getLocationInfo(ip) {
-  const apiKey = 'aff52baa1fc17a1e330dd495aa2c5ad6'; // Replace with your actual API key
+  const apiKey = "aff52baa1fc17a1e330dd495aa2c5ad6"; // Replace with your actual API key
   const apiUrl = `http://api.ipstack.com/${ip}?access_key=${apiKey}`;
 
   try {
     const response = await axios.get(apiUrl);
     return response.data;
   } catch (error) {
-    console.error('Error fetching location info:', error.message);
+    console.error("Error fetching location info:", error.message);
     return null;
   }
 }
@@ -215,7 +221,9 @@ class userControl {
         id_user: isUserExist._id,
         user_agent: device,
         ip: ip,
-        location:  location ? `${location.city}, ${location.region_name}, ${location.country_name}` : 'Unknown',
+        location: location
+          ? `${location.city}, ${location.region_name}, ${location.country_name}`
+          : "Unknown",
         loginAt: Date.now(),
       });
       return res.status(200).json({
@@ -253,7 +261,9 @@ class userControl {
         id_user: isUserExist._id,
         user_agent: device,
         ip: ip,
-        location:  location ? `${location.city}, ${location.region_name}, ${location.country_name}` : 'Unknown',
+        location: location
+          ? `${location.city}, ${location.region_name}, ${location.country_name}`
+          : "Unknown",
         loginAt: Date.now(),
       });
       return res.status(200).json({
@@ -508,7 +518,6 @@ class userControl {
       const headers = req.headers;
       const ObjectId = mongoose.Types.ObjectId;
       let { id } = jwtDecode(headers.authorization);
-      console.log(id);
       const data = await User.aggregate([
         {
           $lookup: {
@@ -684,6 +693,90 @@ class userControl {
       return res.status(200).json({
         status: "Success",
         data: user,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+  async getNotifications(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const { id } = jwtDecode(headers.authorization);
+      const data = await Notifications.aggregate([
+        { $match: { id_user: new ObjectId(id) } },
+      ]);
+      return res.status(200).json({
+        status: "Success",
+        data: data,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+
+  async readNotif(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const { id } = req.params;
+      const id_user = jwtDecode(headers.authorization).id;
+      const check = await Notifications.findOne({
+        id_user: new ObjectId(id_user),
+      });
+      if (!check) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Notification is not found",
+        });
+      }
+      await Notifications.updateOne(
+        {
+          $and: [{ _id: new ObjectId(id) }, { id_user: new ObjectId(id_user) }],
+        },
+        {
+          $set: {
+            status: "read",
+          },
+        }
+      );
+      return res.status(200).json({
+        status: "Success",
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        status: "Failed",
+        message: error,
+      });
+    }
+  }
+  async deleteNotif(req, res) {
+    try {
+      const headers = req.headers;
+      const ObjectId = mongoose.Types.ObjectId;
+      const { id } = req.params;
+      const id_user = jwtDecode(headers.authorization).id;
+      const check = await Notifications.findOne({
+        id_user: new ObjectId(id_user),
+      });
+      if (!check) {
+        return res.status(404).json({
+          status: "Failed",
+          message: "Notification is not found",
+        });
+      }
+      await Notifications.findOneAndDelete({ _id: new ObjectId(id) });
+      return res.status(200).json({
+        status: "Success",
       });
     } catch (error) {
       console.log(error);

@@ -1,13 +1,18 @@
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
-const { createSocketServer, emitTodoListUpdate } = require("./socket");
+const {
+  createSocketServer,
+  emitTodoListUpdate,
+  emitNotifUpdate,
+} = require("./socket");
 const cors = require("cors");
 const router = require("./routes/routes");
 const app = express();
 const { createServer } = require("http");
 const { TodoList } = require("./models/todolistModel");
 var useragent = require("express-useragent");
+const { Notifications } = require("./models/userModel");
 const server = createServer(app);
 const port = process.env.PORT || 9000;
 const uri = process.env.DB_HOST;
@@ -28,8 +33,13 @@ mongoose
 const connection = mongoose.connection;
 
 connection.once("open", () => {
+  // todo list
   const watchAllList = TodoList.watch();
   watchAllList.on("change", emitTodoListUpdate);
+
+  // notification
+  const watchNotif = Notifications.watch();
+  watchNotif.on("change", emitNotifUpdate);
 });
 // app.listen(port, () => {
 //   console.log(`Server Berjalan di port ${port} Berhasil`);

@@ -5,7 +5,7 @@ async function jwtMiddleWare(req, res, next) {
   const { authorization } = req.headers;
   if (authorization == undefined)
     return res.status(401).json({
-      status: "False",
+      status: "Failed",
       message: "Authorization token is required!",
     });
   const token = authorization.split(" ")[1];

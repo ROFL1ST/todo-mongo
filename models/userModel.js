@@ -108,9 +108,45 @@ const historyModel = mongoose.Schema({
   },
 });
 
+const notificationSchema = mongoose.Schema(
+  {
+    id_user: {
+      type: ObjectId,
+      ref: "users",
+      required: true,
+    },
+    title: {
+      type: String,
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: ["message", "request", "invitation", "response"], // Adjust 'otherType' to other possible types
+      required: true,
+    },
+    from: {
+      type: ObjectId,
+      default: null, // Include only for 'message' and 'invitation' type notifications
+    },
+    status: {
+      type: String,
+      enum: ["unread", "read"],
+      default: "unread",
+    },
+    id_content: {
+      type: ObjectId,
+      refPath: "type",
+    }
+  },
+  {
+    timestamps: true,
+  }
+);
+
 const User = mongoose.model("users", userSchema);
 const Forgot = mongoose.model("forgots", forgotModel);
 const Verify = mongoose.model("veryfies", verifyModel);
 const History = mongoose.model("histories", historyModel);
+const Notifications = mongoose.model("notifications", notificationSchema);
 
-module.exports = { User, Forgot, Verify, History };
+module.exports = { User, Forgot, Verify, History, Notifications };

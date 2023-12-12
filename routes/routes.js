@@ -35,13 +35,17 @@ router.get("/user", userControl.searchUser);
 router.get("/profile", userControl.profile);
 router.get("/user/:id", userControl.detailProfile);
 
-// friends
-router.get("/friends", friendController.listFriends)
-router.post("/friends/add/:id", friendController.addFriend)
-router.get("/friends/request", friendController.getFriendsRequest)
-router.put("/friends/request/:id", friendController.respondRequest)
-router.delete("/friends/:id", friendController.removeFriends)
+// notifications
+router.get("/notifications", userControl.getNotifications);
+router.put("/notifications/:id", userControl.readNotif);
+router.delete("/notifications/:id", userControl.deleteNotif);
 
+// friends
+router.get("/friends", friendController.listFriends);
+router.post("/friends/add/:id", friendController.addFriend);
+router.get("/friends/request", friendController.getFriendsRequest);
+router.put("/friends/request/:id", friendController.respondRequest);
+router.delete("/friends/:id", friendController.removeFriends);
 
 // todo
 router.get("/todo", Todo.getTodo);

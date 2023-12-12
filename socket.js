@@ -3,6 +3,7 @@ const { isOnline, isOffline } = require("./controller/userController");
 const { sendMessage } = require("./controller/chatController");
 const { TodoList } = require("./models/todolistModel");
 const { default: mongoose } = require("mongoose");
+const { Notifications } = require("./models/userModel");
 let io;
 const createSocketServer = (server) => {
   io = new Server(server);
@@ -34,12 +35,19 @@ const createSocketServer = (server) => {
 
 const emitTodoListUpdate = async (change) => {
   const ObjectId = mongoose.Types.ObjectId;
+  console.log(change.operationType);
   switch (change.operationType) {
     case "insert":
-      const updatedTodoList = await TodoList.aggregate([
+      const newTodoList = await TodoList.aggregate([
         { $match: { _id: new ObjectId(change.documentKey._id) } },
       ]);
-      io.of("/api/socket").emit("todoListUpdated", updatedTodoList);
+      io.of("/api/socket").emit("todoListNew", newTodoList);
+      break;
+    case "update":
+      const updatedTodoListUpdate = await TodoList.aggregate([
+        { $match: { _id: new ObjectId(change.documentKey._id) } },
+      ]);
+      io.of("/api/socket").emit("todoListUpdated", updatedTodoListUpdate);
       break;
     case "delete":
       io.of("/api/socket").emit("todoListDeleted", change.documentKey._id);
@@ -47,4 +55,25 @@ const emitTodoListUpdate = async (change) => {
   }
 };
 
-module.exports = { createSocketServer, emitTodoListUpdate };
+const emitNotifUpdate = async (change) => {
+  const ObjectId = mongoose.Types.ObjectId;
+  switch (change.operationType) {
+    case "insert":
+      const newNotif = await Notifications.findOne({
+        _id: new ObjectId(change.documentKey._id),
+      });
+      io.of("/api/socket").emit("notificationsNew", newNotif);
+      break;
+    case "update":
+      const updatedNotif = await Notifications.aggregate([
+        { $match: { _id: new ObjectId(change.documentKey._id) } },
+      ]);
+      io.of("/api/socket").emit("notificationsUpdate", updatedNotif);
+      break;
+    case "delete":
+      io.of("/api/socket").emit("notificationsDown", change.documentKey._id);
+      break;
+  }
+};
+
+module.exports = { createSocketServer, emitTodoListUpdate, emitNotifUpdate };

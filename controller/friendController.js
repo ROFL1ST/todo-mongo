@@ -1,5 +1,5 @@
 const { Friend, FriendRequest } = require("../models/friendsModel");
-const { User } = require("../models/userModel");
+const { User, Notifications } = require("../models/userModel");
 const { default: jwtDecode } = require("jwt-decode");
 const { default: mongoose } = require("mongoose");
 
@@ -60,9 +60,17 @@ class friendsControl {
           message: "Has been added to friend list",
         });
       }
-      await FriendRequest.create({
+      const content = await FriendRequest.create({
         fromUserId: from,
         toUserId: id,
+      });
+      const user = await User.findOne({ _id: new ObjectId(id) });
+      await Notifications.create({
+        id_user: id,
+        title: `${user.username} sent you a friend request`,
+        type: "request",
+        id_content: content._id,
+        from: from,
       });
       return res.status(200).json({
         status: "Success",
@@ -171,7 +179,17 @@ class friendsControl {
           id_user: id_user,
           id_friend: response.fromUserId,
         });
+        await Notifications.findOneAndDelete({
+          from: new ObjectId(response.fromUserId),
+        });
         await FriendRequest.findOneAndDelete({ _id: new ObjectId(id) });
+        const user = await User.findOne({ _id: new ObjectId(id_user) });
+        await Notifications.create({
+          from: id_user,
+          id_user: response.fromUserId,
+          title: `${user.username} has accepted your friend request`,
+          type: "response",
+        });
         return res.status(200).json({
           status: "Success",
           message: "Successfull added to friend list",
