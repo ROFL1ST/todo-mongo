@@ -222,7 +222,7 @@ class friendsControl {
       const headers = req.headers;
       const ObjectId = mongoose.Types.ObjectId;
       const id = jwtDecode(headers.authorization).id;
-
+      const { key = "" } = req.query;
       const friends = await Friend.aggregate([
         {
           $addFields: {
@@ -250,6 +250,7 @@ class friendsControl {
                   username: 1,
                   photo_profile: 1,
                   status: 1,
+                  default_color: 1
                 },
               },
             ],
@@ -263,6 +264,14 @@ class friendsControl {
             newRoot: {
               $mergeObjects: ["$detail", { _id: "$_id", id_user: "$id_user" }],
             },
+          },
+        },
+        {
+          $match: {
+            $or: [
+              { name: { $regex: key, $options: "i" } },
+              { username: { $regex: key, $options: "i" } },
+            ],
           },
         },
       ]);
