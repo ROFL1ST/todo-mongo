@@ -16,6 +16,7 @@ const crypto = require("crypto");
 const { TodoModel, ListUsersModel } = require("../models/todoModels");
 const { v4: uuidv4 } = require("uuid");
 const { default: axios } = require("axios");
+const { generateRandomColor } = require("../colors/generate");
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -71,6 +72,8 @@ class userControl {
         });
       }
       body.password = bcrypt.hashSync(body.password, 10);
+      const randomColor = generateRandomColor();
+      body.default_color = randomColor;
       let newUser = await User.create(body);
       let kode = crypto.randomBytes(32).toString("hex");
       const link = `${process.env.MAIL_CLIENT_URL}/verify/${kode}`;
@@ -93,7 +96,6 @@ class userControl {
         id_user: new ObjectId(newUser._id),
         code: kode,
       });
-
       res.status(200).json({
         status: "Success",
         message: "Verification has been sent to your email",

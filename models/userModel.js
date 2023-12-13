@@ -28,7 +28,10 @@ const userSchema = mongoose.Schema(
       type: String,
       default: null,
     },
-
+    default_color: {
+      type: String,
+      default: null
+    },
     photo_profile: {
       type: String,
       default: null,
