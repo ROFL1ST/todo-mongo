@@ -223,7 +223,16 @@ class friendsControl {
       const ObjectId = mongoose.Types.ObjectId;
       const id = jwtDecode(headers.authorization).id;
       const { key = "" } = req.query;
+
       const friends = await Friend.aggregate([
+        {
+          $match: {
+            $or: [
+              { id_user: new ObjectId(id) },
+              { id_friend: new ObjectId(id) },
+            ],
+          },
+        },
         {
           $addFields: {
             lookupId: {
@@ -241,29 +250,21 @@ class friendsControl {
             localField: "lookupId",
             foreignField: "_id",
             as: "detail",
-            pipeline: [
-              {
-                $project: {
-                  _id: 1,
-                  email: 1,
-                  name: 1,
-                  username: 1,
-                  photo_profile: 1,
-                  status: 1,
-                  default_color: 1
-                },
-              },
-            ],
           },
         },
         {
           $unwind: "$detail",
         },
         {
-          $replaceRoot: {
-            newRoot: {
-              $mergeObjects: ["$detail", { _id: "$_id", id_user: "$id_user" }],
-            },
+          $project: {
+            _id: 1, // Keep the _id from the Friend schema
+            id_user: "$detail._id",
+            email: "$detail.email",
+            name: "$detail.name",
+            username: "$detail.username",
+            photo_profile: "$detail.photo_profile",
+            status: "$detail.status",
+            default_color: "$detail.default_color",
           },
         },
         {
@@ -275,19 +276,19 @@ class friendsControl {
           },
         },
       ]);
+
       return res.status(200).json({
         status: "Success",
         data: friends,
       });
     } catch (error) {
-      console.log(error);
+      console.error(error);
       return res.status(500).json({
         status: "Failed",
-        message: error,
+        message: "Internal Server Error",
       });
     }
   }
-
   async removeFriends(req, res) {
     try {
       const headers = req.headers;
