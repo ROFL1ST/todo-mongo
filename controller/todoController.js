@@ -833,7 +833,9 @@ class todo {
           });
         }
       }
-      let data = await ListUsersModel.findOneAndDelete(id);
+      let data = await ListUsersModel.findOneAndDelete({
+        id_user: new ObjectId(kick)
+      });
       return res.status(200).json({
         status: "Success",
         message: "Kick member success!",
