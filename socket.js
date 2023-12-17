@@ -59,16 +59,53 @@ const emitNotifUpdate = async (change) => {
   const ObjectId = mongoose.Types.ObjectId;
   switch (change.operationType) {
     case "insert":
-      const newNotif = await Notifications.findOne({
-        _id: new ObjectId(change.documentKey._id),
-      });
-      io.of("/api/socket").emit("notificationsNew", newNotif);
+      const newNotif = await Notifications.aggregate([
+        { $match: { _id: new ObjectId(change.documentKey._id) } },
+        {
+          $lookup: {
+            from: "users",
+            localField: "from",
+            foreignField: "_id",
+            as: "userDetails",
+          },
+        },
+        {
+          $unwind: "$userDetails",
+        },
+        {
+          $addFields: {
+            userDetails: 0,
+            username: "$userDetails.username",
+            photo_profile: "$userDetails.photo_profile",
+            default_color: "$userDetails.default_color",
+          },
+        },
+      ]);
+      io.of("/api/socket").emit("notificationsNew", newNotif[0]);
       break;
     case "update":
       const updatedNotif = await Notifications.aggregate([
         { $match: { _id: new ObjectId(change.documentKey._id) } },
+        {
+          $lookup: {
+            from: "users",
+            localField: "from",
+            foreignField: "_id",
+            as: "userDetails",
+          },
+        },
+        {
+          $unwind: "$userDetails",
+        },
+        {
+          $addFields: {
+            username: "$userDetails.username",
+            photo_profile: "$userDetails.photo_profile",
+            default_color: "$userDetails.default_color",
+          },
+        },
       ]);
-      io.of("/api/socket").emit("notificationsUpdate", updatedNotif);
+      io.of("/api/socket").emit("notificationsUpdate", updatedNotif[0]);
       break;
     case "delete":
       io.of("/api/socket").emit("notificationsDown", change.documentKey._id);

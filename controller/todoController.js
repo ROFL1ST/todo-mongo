@@ -841,7 +841,7 @@ class todo {
         let user = await User.findOne({ _id: new ObjectId(kick) });
         await Notifications.create({
           id_user: id[0]._id,
-          title: `${user.name} has leaved the "${todo[0].name}"`,
+          title: `${user.username} has leaved the "${todo[0].name}"`,
           type: "message",
           id_content: todo[0]._id,
           from: kick,
