@@ -834,8 +834,25 @@ class todo {
         }
       }
       let data = await ListUsersModel.findOneAndDelete({
-        id_user: new ObjectId(kick)
+        id_user: new ObjectId(kick),
       });
+      if (id_user == kick) {
+        let id = todo[0].user.filter((i) => i.role == "owner");
+        console.log(id);
+        await Notifications.create({
+          id_user: id[0].id_user,
+          title: `${listUser[0].name} has leaved the ${todo[0].name}`,
+          type: "message",
+          id_content: todo[0]._id,
+        });
+      } else {
+        await Notifications.create({
+          id_user: kick,
+          title: `you have been kicked from the "${todo[0].name}"`,
+          type: "message",
+          id_content: todo[0]._id,
+        });
+      }
       return res.status(200).json({
         status: "Success",
         message: "Kick member success!",
