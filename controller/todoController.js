@@ -852,6 +852,7 @@ class todo {
           title: `you have been kicked from the "${todo[0].name}"`,
           type: "message",
           id_content: todo[0]._id,
+          from: id_user,
         });
       }
       return res.status(200).json({
