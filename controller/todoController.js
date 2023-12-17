@@ -838,12 +838,13 @@ class todo {
       });
       if (id_user == kick) {
         let id = todo[0].user.filter((i) => i.role == "owner");
-        console.log(id);
+        let user = await User.findOne({ _id: new ObjectId(kick) });
         await Notifications.create({
-          id_user: id[0].id_user,
-          title: `${listUser[0].name} has leaved the ${todo[0].name}`,
+          id_user: id[0]._id,
+          title: `${user.name} has leaved the "${todo[0].name}"`,
           type: "message",
           id_content: todo[0]._id,
+          from: kick,
         });
       } else {
         await Notifications.create({
