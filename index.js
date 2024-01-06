@@ -17,11 +17,17 @@ const server = createServer(app);
 const port = process.env.PORT || 9000;
 const uri = process.env.DB_HOST;
 const dbName = process.env.DB_DATABASE;
+var serviceAccount = require("./JSON/todo-da3ef-firebase-adminsdk-ynx4w-f0ae29ff82.json");
 app.use(useragent.express());
 app.use(cors());
 app.use(express.json());
 app.use("/api", router);
 const io = createSocketServer(server);
+var admin = require("firebase-admin");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 mongoose
   .connect(uri)
   .then(() => {
@@ -41,6 +47,14 @@ connection.once("open", () => {
   const watchNotif = Notifications.watch();
   watchNotif.on("change", emitNotifUpdate);
 });
+
+
+
+
+
+
+
+
 // app.listen(port, () => {
 //   console.log(`Server Berjalan di port ${port} Berhasil`);
 // });

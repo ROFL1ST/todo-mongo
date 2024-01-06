@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "engines": {
+    "node": "14.x"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon index.js"
@@ -21,6 +24,7 @@
     "express": "^4.18.2",
     "express-useragent": "^1.0.15",
     "express-validator": "^7.0.1",
+    "firebase-admin": "^12.0.0",
     "graphql": "^16.8.1",
     "graphql-subscriptions": "^2.0.0",
     "http": "^0.0.1-security",
