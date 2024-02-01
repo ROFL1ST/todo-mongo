@@ -377,6 +377,7 @@ class todo {
           $match: {
             $and: [
               { invitedUser: new ObjectId(body.invitedUser) },
+              { id_todo: new ObjectId(id)},
               { status: "pending" },
             ],
           },
