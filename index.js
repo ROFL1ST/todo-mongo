@@ -71,21 +71,25 @@ connection.once("open", () => {
             },
           },
         ]);
-        console.log(newNotif[0].title);
+        const titleMapping = {
+          message: "New Message Arrived!",
+          request: "You've got a Request!",
+          invitation: "You've been Invited!",
+          response: "You've received a Response!",
+        };
+
+        const notificationType = newNotif[0].type;
+        const customTitle =
+          titleMapping[notificationType] || "Something's Happening!";
         const payload = {
           notification: {
-            title: "something's new",
+            title: customTitle,
             body: newNotif[0].title,
           },
           data: {
             type: newNotif[0].type, // Add the 'type' property
             id_user: newNotif[0].id_user.toString(), // Add the 'id_user' property (convert to string if necessary)
-            title:
-              newNotif[0].type == "invitation"
-                ? "You've been invited"
-                : newNotif[0].type == "message"
-                ? "New Message"
-                : "Something's New",
+            title: customTitle,
             body: newNotif[0].title,
           },
         };
