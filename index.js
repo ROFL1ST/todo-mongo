@@ -87,10 +87,16 @@ connection.once("open", () => {
             body: newNotif[0].title,
           },
           data: {
+            _id: newNotif[0]._id.toString(),
+            senderId: newNotif[0].from.toString(),
+            status: newNotif[0].status,
+            id_content: newNotif[0].id_content.toString(),
             type: newNotif[0].type, // Add the 'type' property
             id_user: newNotif[0].id_user.toString(), // Add the 'id_user' property (convert to string if necessary)
             title: customTitle,
             body: newNotif[0].title,
+            createdAt: newNotif[0].createdAt.toString(),
+            updatedAt: newNotif[0].updatedAt.toString(),
           },
         };
         try {
