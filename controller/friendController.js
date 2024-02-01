@@ -64,7 +64,7 @@ class friendsControl {
         fromUserId: from,
         toUserId: id,
       });
-      const user = await User.findOne({ _id: new ObjectId(id) });
+      const user = await User.findOne({ _id: new ObjectId(from) });
       await Notifications.create({
         id_user: id,
         title: `${user.username} sent you a friend request`,
